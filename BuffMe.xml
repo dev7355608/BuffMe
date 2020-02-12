@@ -1,0 +1,81 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+..\FrameXML\UI.xsd">
+    <Script file="ChatThrottleLib.lua"/>
+    <Script file="BuffMe.lua"/>
+    <Frame name="BuffMeWarningFrame" parent="UIParent" frameStrata="HIGH" toplevel="true" hidden="true">
+        <Size>
+            <AbsDimension x="512" y="70"/>
+        </Size>
+        <Anchors>
+            <Anchor point="TOP" relativeTo="RaidWarningFrame" relativePoint="BOTTOM"/>
+        </Anchors>
+        <Layers>
+            <Layer level="ARTWORK">
+                <FontString name="BuffMeWarningFrameSlot1" inherits="GameFontNormalHuge" justifyH="CENTER" hidden="true">
+                    <Size x="800" y="0"/>
+                    <Anchors>
+                        <Anchor point="TOP"/>
+                    </Anchors>
+                </FontString>
+                <FontString name="BuffMeWarningFrameSlot2" inherits="GameFontNormalHuge" justifyH="CENTER" hidden="true">
+                    <Size x="800" y="0"/>
+                    <Anchors>
+                        <Anchor point="TOP" relativeTo="BuffMeWarningFrameSlot1" relativePoint="BOTTOM"/>
+                    </Anchors>
+                </FontString>
+                <FontString name="BuffMeWarningFrameSlot3" inherits="GameFontNormalHuge" justifyH="CENTER" hidden="true">
+                    <Size x="800" y="0"/>
+                    <Anchors>
+                        <Anchor point="TOP" relativeTo="BuffMeWarningFrameSlot2" relativePoint="BOTTOM"/>
+                    </Anchors>
+                </FontString>
+                <FontString name="BuffMeWarningFrameSlot4" inherits="GameFontNormalHuge" justifyH="CENTER" hidden="true">
+                    <Size x="800" y="0"/>
+                    <Anchors>
+                        <Anchor point="TOP" relativeTo="BuffMeWarningFrameSlot3" relativePoint="BOTTOM"/>
+                    </Anchors>
+                </FontString>
+                <FontString name="BuffMeWarningFrameSlot5" inherits="GameFontNormalHuge" justifyH="CENTER" hidden="true">
+                    <Size x="800" y="0"/>
+                    <Anchors>
+                        <Anchor point="TOP" relativeTo="BuffMeWarningFrameSlot4" relativePoint="BOTTOM"/>
+                    </Anchors>
+                </FontString>
+                <FontString name="BuffMeWarningFrameSlot6" inherits="GameFontNormalHuge" justifyH="CENTER" hidden="true">
+                    <Size x="800" y="0"/>
+                    <Anchors>
+                        <Anchor point="TOP" relativeTo="BuffMeWarningFrameSlot5" relativePoint="BOTTOM"/>
+                    </Anchors>
+                </FontString>
+                <FontString name="BuffMeWarningFrameSlot7" inherits="GameFontNormalHuge" justifyH="CENTER" hidden="true">
+                    <Size x="800" y="0"/>
+                    <Anchors>
+                        <Anchor point="TOP" relativeTo="BuffMeWarningFrameSlot6" relativePoint="BOTTOM"/>
+                    </Anchors>
+                </FontString>
+                <FontString name="BuffMeWarningFrameSlot8" inherits="GameFontNormalHuge" justifyH="CENTER" hidden="true">
+                    <Size x="800" y="0"/>
+                    <Anchors>
+                        <Anchor point="TOP" relativeTo="BuffMeWarningFrameSlot7" relativePoint="BOTTOM"/>
+                    </Anchors>
+                </FontString>
+                <FontString name="BuffMeWarningFrameSlot9" inherits="GameFontNormalHuge" justifyH="CENTER" hidden="true">
+                    <Size x="800" y="0"/>
+                    <Anchors>
+                        <Anchor point="TOP" relativeTo="BuffMeWarningFrameSlot8" relativePoint="BOTTOM"/>
+                    </Anchors>
+                </FontString>
+                <FontString name="BuffMeWarningFrameSlot10" inherits="GameFontNormalHuge" justifyH="CENTER" hidden="true">
+                    <Size x="800" y="0"/>
+                    <Anchors>
+                        <Anchor point="TOP" relativeTo="BuffMeWarningFrameSlot9" relativePoint="BOTTOM"/>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Scripts>
+            <OnLoad function="BuffMeWarningFrame_OnLoad"/>
+            <OnUpdate function="BuffMeNotice_OnUpdate"/>
+        </Scripts>
+    </Frame>
+</Ui>

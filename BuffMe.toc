@@ -1,0 +1,12 @@
+﻿## Interface: 11303
+## Title: BuffMe
+## Version: @project-version@
+## Authors: dev7355608
+## Notes: Request buffs from group members
+## X-Curse-Project-ID: 362203
+
+libs\LibStub\LibStub.lua
+libs\LibGetFrame\LibGetFrame-1.0.xml
+libs\LibCustomGlow\LibCustomGlow-1.0.xml
+
+BuffMe.xml
