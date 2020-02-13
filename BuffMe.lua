@@ -2009,10 +2009,10 @@ do
     loadNext(next(BUFFS))
 end
 
-local PRINT_PREFIX = "\124cffff8080<\124cffff4040BuffMe\124cffff8080>\124r"
+local BuffMeChatTypeInfo = {r = 1.0, g = 0.84, b = 0.73, flashTab = true, flashTabOnGeneral = true, sticky = 0}
 
 local function BuffMe_Print(...)
-    local message = strjoin(" ", PRINT_PREFIX, tostringall(...))
+    local message = strjoin(" ", "\124cffff8080<\124cffff4040BuffMe\124cffff8080>\124r", tostringall(...))
     local tab
 
     for i = 1, 10 do
@@ -2022,16 +2022,17 @@ local function BuffMe_Print(...)
         end
     end
 
+    local info = BuffMeChatTypeInfo
     local chatFrame = tab and _G["ChatFrame" .. tab] or DEFAULT_CHAT_FRAME
-    chatFrame:AddMessage(message, 1.0, 0.84, 0.73)
+
+    chatFrame:AddMessage(message, info.r, info.g, info.b)
 
     if not chatFrame:IsShown() then
-        FCF_StartAlertFlash(chatFrame)
+        if chatFrame == DEFAULT_CHAT_FRAME and info.flashTabOnGeneral or chatFrame ~= DEFAULT_CHAT_FRAME and info.flashTab then
+            FCF_StartAlertFlash(chatFrame)
+        end
     end
 end
-
-local RAID_WARNING_FORMAT = "%s   --->   %s"
-local RAID_WARNING_WITH_GROUP_FORMAT = RAID_WARNING_FORMAT .. " (" .. GROUP_NUMBER .. ")"
 
 local BuffMeNotice_AddMessage
 
@@ -2069,6 +2070,7 @@ eventFrame:SetScript(
             return
         end
 
+        local silent = false
         local buffName, unitName = strsplit(":", text)
         local buffFamily = BuffFamily:Get(buffName)
 
@@ -2097,26 +2099,33 @@ eventFrame:SetScript(
             end
         end
 
-        local auraName = buffFamily:GetName()
+        local buffFamilyName = buffFamily:GetName()
 
         unitName = Ambiguate(unitName or sender, "none")
 
-        local warning
+        local _, unitClass = UnitClass(unitName)
+        local _, buffFamilyClass = buffFamily:GetClassName(true)
 
-        do
-            local raidIndex = UnitInRaid(unitName)
-            if raidIndex then
-                local _, _, subgroup = GetRaidRosterInfo(raidIndex)
-                warning = format(RAID_WARNING_WITH_GROUP_FORMAT, auraName, unitName, subgroup)
-            else
-                warning = format(RAID_WARNING_FORMAT, auraName, unitName)
-            end
+        local who = unitName
+        local what = RAID_CLASS_COLORS[buffFamilyClass]:WrapTextInColorCode(buffFamilyName)
+
+        local raidIndex = UnitInRaid(unitName)
+        if raidIndex then
+            local _, _, subgroup = GetRaidRosterInfo(raidIndex)
+            who = format("%s (Group %d)", unitName, subgroup)
         end
 
-        local duration = 4
-        local _, class = UnitClass(unitName)
+        if unitClass then
+            who = RAID_CLASS_COLORS[unitClass]:WrapTextInColorCode(who)
+        end
 
-        BuffMeNotice_AddMessage(BuffMeWarningFrame, warning, class and RAID_CLASS_COLORS[class] or ChatTypeInfo["RAID_WARNING"], duration)
+        if not silent then
+            BuffMe_Print(format("%s requested %s.", who, what))
+        end
+
+        local duration = 5
+
+        BuffMeNotice_AddMessage(BuffMeWarningFrame, format("%s   >>>   %s", what, who), BuffMeChatTypeInfo, duration)
 
         local unitFrame = LibGetFrame.GetUnitFrame(unitName)
 
