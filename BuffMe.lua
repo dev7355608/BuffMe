@@ -10,6 +10,7 @@ local GetTime = GetTime
 local GetRaidRosterInfo = GetRaidRosterInfo
 local GetNormalizedRealmName = GetNormalizedRealmName
 local GetSpellInfo = GetSpellInfo
+local GetNumGroupMembers = GetNumGroupMembers
 local Ambiguate = Ambiguate
 local C_Timer = C_Timer
 local C_ChatInfo = C_ChatInfo
@@ -1569,7 +1570,7 @@ eventFrame:SetScript(
             return
         end
 
-        local buffName, target = strsplit(":", text)
+        local buffName, unitName = strsplit(":", text)
         local buffFamily = BuffFamily:Get(buffName)
 
         if not buffFamily then
@@ -1591,23 +1592,26 @@ eventFrame:SetScript(
 
         local auraName = buffFamily:GetName()
 
-        target = Ambiguate(target or sender, "none")
+        unitName = Ambiguate(unitName or sender, "none")
 
         local warning
 
-        if UnitInRaid(target) then
-            local _, _, subgroup = GetRaidRosterInfo(UnitInRaid(target))
-            warning = format(RAID_WARNING_WITH_GROUP_FORMAT, auraName, target, subgroup)
-        else
-            warning = format(RAID_WARNING_FORMAT, auraName, target)
+        do
+            local raidIndex = UnitInRaid(unitName)
+            if raidIndex then
+                local _, _, subgroup = GetRaidRosterInfo(raidIndex)
+                warning = format(RAID_WARNING_WITH_GROUP_FORMAT, auraName, unitName, subgroup)
+            else
+                warning = format(RAID_WARNING_FORMAT, auraName, unitName)
+            end
         end
 
         local duration = 4
-        local _, class = UnitClass(target)
+        local _, class = UnitClass(unitName)
 
         BuffMeNotice_AddMessage(BuffMeWarningFrame, warning, class and RAID_CLASS_COLORS[class] or ChatTypeInfo["RAID_WARNING"], duration)
 
-        local unitFrame = LibGetFrame.GetUnitFrame(target)
+        local unitFrame = LibGetFrame.GetUnitFrame(unitName)
 
         if unitFrame then
             BuffMeButton_Glow(unitFrame, duration)
@@ -1620,6 +1624,7 @@ eventFrame:SetScript(
 C_ChatInfo.RegisterAddonMessagePrefix("BuffMe")
 
 local function BuffMe(cmd)
+    local unit = GetUnitName("player", true)
     local target, duration, silent, exists, help
     local conditionals = strmatch(cmd, "^%s*%[([^%]]*)%]")
     local spells = {strsplit(",", conditionals and strmatch(cmd, "^%s*%[[^%]]*%]%s*(.-)%s*$") or cmd)}
@@ -1663,24 +1668,24 @@ local function BuffMe(cmd)
         end
     end
 
-    target = target or "player"
+    if target then
+        if not UnitExists(target) or not GetUnitName(target, true) then
+            if not exists then
+                print(PRINT_PREFIX, format("\124cffff0000Unknown target:\124r %s", target))
+            end
 
-    if not UnitExists(target) or not GetUnitName(target, true) then
-        if not exists then
-            print(PRINT_PREFIX, format("\124cffff0000Unknown target:\124r %s", target))
+            return
         end
 
-        return
-    end
+        target = GetUnitName(target, true)
 
-    target = GetUnitName(target, true)
+        if not UnitIsPlayer(target) or not UnitCanAssist("player", target) then
+            if not help then
+                print(PRINT_PREFIX, format("\124cffff0000Invalid target:\124r %s", target))
+            end
 
-    if not UnitIsPlayer(target) and not UnitCanAssist("player", target) then
-        if not help then
-            print(PRINT_PREFIX, format("\124cffff0000Invalid target:\124r %s", target))
+            return
         end
-
-        return
     end
 
     for _, spell in ipairs(spells) do
@@ -1698,7 +1703,7 @@ local function BuffMe(cmd)
                 local index = 1
 
                 while true do
-                    auraName, _, _, _, _, expirationTime, unitCaster, _, _, spellID = UnitBuff(target, index)
+                    auraName, _, _, _, _, expirationTime, unitCaster, _, _, spellID = UnitBuff(unit, index)
 
                     if not auraName then
                         break
@@ -1721,16 +1726,16 @@ local function BuffMe(cmd)
                     end
 
                     if LibClassicDurations then
-                        _, expirationTime = LibClassicDurations:GetAuraDurationByUnit(target, spellID, unitCaster, auraName)
+                        _, expirationTime = LibClassicDurations:GetAuraDurationByUnit(unit, spellID, unitCaster, auraName)
                     end
                 end
 
-                if not duration or expirationTime > GetTime() + duration then
+                if not duration or expirationTime == 0 or expirationTime > GetTime() + duration then
                     if not silent then
-                        if UnitIsUnit(target, "player") then
+                        if UnitIsUnit(unit, "player") then
                             print(PRINT_PREFIX, format("\124cff00ff00You already have \124r%s\124cff00ff00.", auraName))
                         else
-                            print(PRINT_PREFIX, format("\124cff00ff00%s already has \124r%s\124cff00ff00.", target, auraName))
+                            print(PRINT_PREFIX, format("\124cff00ff00%s already has \124r%s\124cff00ff00.", unit, auraName))
                         end
                     end
 
@@ -1742,25 +1747,36 @@ local function BuffMe(cmd)
         if not silent then
             local buffFamilyName = buffFamily:GetName(true)
 
-            if UnitIsUnit(target, "player") then
+            if not target then
                 print(PRINT_PREFIX, format("\124cffffff00Requesting \124r%s\124cffffff00.", buffFamilyName))
-            elseif UnitInRaid(target) then
-                local _, _, subgroup = GetRaidRosterInfo(UnitInRaid(target))
-                print(PRINT_PREFIX, format("\124cffffff00Requesting \124r%s \124cffffff00for \124r%s (Group %d)\124cffffff00.", buffFamilyName, target, subgroup))
             else
-                print(PRINT_PREFIX, format("\124cffffff00Requesting \124r%s \124cffffff00for \124r%s\124cffffff00.", buffFamilyName, target))
+                local raidIndex = UnitInRaid(target)
+                if raidIndex then
+                    local _, _, subgroup = GetRaidRosterInfo(raidIndex)
+                    print(PRINT_PREFIX, format("\124cffffff00Requesting \124r%s \124cffffff00from \124r%s (Group %d)\124cffffff00.", buffFamilyName, target, subgroup))
+                else
+                    print(PRINT_PREFIX, format("\124cffffff00Requesting \124r%s \124cffffff00from \124r%s\124cffffff00.", buffFamilyName, target))
+                end
             end
         end
 
         local message
 
-        if UnitIsUnit(target, "player") then
+        if UnitIsUnit(unit, "player") then
             message = buffFamily:GetID()
         else
-            message = format("%s:%s-%s", buffFamily:GetID(), gsub(target, "%-.*", ""), GetNormalizedRealmName())
+            message = format("%s:%s-%s", buffFamily:GetID(), gsub(unit, "%-.*", ""), GetNormalizedRealmName())
         end
 
-        C_ChatInfo.SendAddonMessage("BuffMe", message, "RAID")
+        if target then
+            C_ChatInfo.SendAddonMessage("BuffMe", message, "WHISPER", target)
+        else
+            if GetNumGroupMembers() == 0 then
+                C_ChatInfo.SendAddonMessage("BuffMe", message, "WHISPER", GetUnitName("player", true))
+            else
+                C_ChatInfo.SendAddonMessage("BuffMe", message, "RAID")
+            end
+        end
     end
 end
 
