@@ -1657,12 +1657,16 @@ local BUFFS = {
     }
 }
 
+local function normalize(key)
+    return tonumber(key) or type(key) == "string" and strlower(strtrim(strmatch(key, "!?(.*)"))) or key
+end
+
 local DatabaseMetatable = {
     __newindex = function(t, k, v)
-        return rawset(t, tonumber(k) or type(k) == "string" and strlower(strtrim(k)) or k, v)
+        return rawset(t, normalize(k), v)
     end,
     __index = function(t, k)
-        return rawget(t, tonumber(k) or type(k) == "string" and strlower(strtrim(k)) or k)
+        return rawget(t, normalize(k))
     end,
     __metatable = true
 }
