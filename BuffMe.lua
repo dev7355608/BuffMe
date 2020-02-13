@@ -3,17 +3,21 @@ local GetUnitName = GetUnitName
 local UnitInRaid = UnitInRaid
 local UnitIsPlayer = UnitIsPlayer
 local UnitIsUnit = UnitIsUnit
+local UnitGUID = UnitGUID
 local UnitBuff = UnitBuff
 local UnitClass = UnitClass
+local UnitRace = UnitRace
 local UnitCanAssist = UnitCanAssist
 local GetTime = GetTime
 local GetRaidRosterInfo = GetRaidRosterInfo
 local GetNormalizedRealmName = GetNormalizedRealmName
-local GetSpellInfo = GetSpellInfo
 local GetNumGroupMembers = GetNumGroupMembers
+local GetTalentInfo = GetTalentInfo
+local GetLocale = GetLocale
 local Ambiguate = Ambiguate
 local C_Timer = C_Timer
 local C_ChatInfo = C_ChatInfo
+local C_CreatureInfo = C_CreatureInfo
 local format = format
 local strlower = strlower
 local strtrim = strtrim
@@ -37,274 +41,653 @@ local LibGetFrame = LibStub("LibGetFrame-1.0")
 local LibCustomGlow = LibStub("LibCustomGlow-1.0")
 local LibClassicDurations
 
-local NAMES = {
-    [11549] = "Battle Shout",
-    [27681] = "Prayer of Spirit",
-    [6066] = "Power Word: Shield",
-    [10595] = "Nature Resistance Totem",
-    [6074] = "Renew",
-    [6076] = "Renew",
-    [6078] = "Renew",
-    [10611] = "Windfury Totem Effect",
-    [27841] = "Divine Spirit",
-    [10627] = "Grace of Air Totem",
-    [8146] = "Tremor Totem Effect",
-    [10156] = "Arcane Intellect",
-    [5599] = "Blessing of Protection",
-    [8156] = "Stoneskin",
-    [8160] = "Strength of Earth Totem",
-    [8162] = "Strength of Earth",
-    [8166] = "Poison Cleansing Totem",
-    [8168] = "Poison Cleansing Totem Effect",
-    [8170] = "Disease Cleansing Totem",
-    [8178] = "Grounding Totem Effect",
-    [20911] = "Blessing of Sanctuary",
-    [8184] = "Fire Resistance Totem",
-    [643] = "Devotion Aura",
-    [1032] = "Devotion Aura",
-    [19977] = "Blessing of Light",
-    [6673] = "Battle Shout",
-    [774] = "Rejuvenation",
-    [19506] = "Trueshot Aura",
-    [10292] = "Devotion Aura",
-    [10300] = "Retribution Aura",
-    [5675] = "Mana Spring Totem",
-    [5677] = "Mana Spring",
-    [6192] = "Battle Shout",
-    [131] = "Water Breathing",
-    [1044] = "Blessing of Freedom",
-    [25782] = "Greater Blessing of Might",
-    [5697] = "Unending Breath",
-    [8835] = "Grace of Air Totem",
-    [2090] = "Rejuvenation",
-    [2091] = "Rejuvenation",
-    [20217] = "Blessing of Kings",
-    [3627] = "Rejuvenation",
-    [20752] = "Create Soulstone (Lesser)",
-    [25359] = "Grace of Air Totem",
-    [19746] = "Concentration Aura",
-    [782] = "Thorns",
-    [25894] = "Greater Blessing of Wisdom",
-    [10927] = "Renew",
-    [25918] = "Greater Blessing of Wisdom",
-    [19834] = "Blessing of Might",
-    [19850] = "Blessing of Wisdom",
-    [1058] = "Rejuvenation",
-    [5242] = "Battle Shout",
-    [8939] = "Regrowth",
-    [10476] = "Frost Resistance",
-    [17359] = "Mana Tide Totem",
-    [10496] = "Mana Spring Totem",
-    [23028] = "Arcane Brilliance",
-    [15111] = "Windwall Totem",
-    [19978] = "Blessing of Light",
-    [11550] = "Battle Shout",
-    [27683] = "Prayer of Shadow Protection",
-    [8512] = "Windfury Totem",
-    [1075] = "Thorns",
-    [10600] = "Nature Resistance Totem",
-    [17] = "Power Word: Shield",
-    [6346] = "Fear Ward",
-    [20729] = "Blessing of Sacrifice",
-    [25360] = "Grace of Air",
-    [14752] = "Divine Spirit",
-    [10157] = "Arcane Intellect",
-    [10169] = "Amplify Magic",
-    [10173] = "Dampen Magic",
-    [19835] = "Blessing of Might",
-    [465] = "Devotion Aura",
-    [20905] = "Trueshot Aura",
-    [20913] = "Blessing of Sanctuary",
-    [19899] = "Fire Resistance Aura",
-    [17360] = "Mana Tide",
-    [11766] = "Blood Pact",
-    [19979] = "Blessing of Light",
-    [467] = "Thorns",
-    [10293] = "Devotion Aura",
-    [10301] = "Retribution Aura",
-    [139] = "Renew",
-    [3747] = "Power Word: Shield",
-    [25289] = "Battle Shout",
-    [9858] = "Regrowth",
-    [10900] = "Power Word: Shield",
-    [25361] = "Strength of Earth Totem",
-    [24858] = "Moonkin Form",
-    [10405] = "Stoneskin",
-    [10928] = "Renew",
-    [9910] = "Thorns",
-    [15036] = "Flametongue Totem Effect",
-    [10441] = "Strength of Earth",
-    [19836] = "Blessing of Might",
-    [19852] = "Blessing of Wisdom",
-    [10461] = "Healing Stream",
-    [19876] = "Shadow Resistance Aura",
-    [8936] = "Regrowth",
-    [8940] = "Regrowth",
-    [10477] = "Frost Resistance",
-    [10493] = "Mana Spring",
-    [10497] = "Mana Spring Totem",
-    [8071] = "Stoneskin Totem",
-    [16387] = "Flametongue Totem",
-    [15112] = "Windwall Totem",
-    [10521] = "Flametongue Totem Effect",
-    [11551] = "Battle Shout",
-    [10537] = "Fire Resistance Totem",
-    [16190] = "Mana Tide Totem",
-    [6065] = "Power Word: Shield",
-    [6075] = "Renew",
-    [6077] = "Renew",
-    [10613] = "Windfury Totem",
-    [25290] = "Blessing of Wisdom",
-    [2791] = "Power Word: Fortitude",
-    [20707] = "Soulstone Resurrection",
-    [8143] = "Tremor Totem",
-    [25362] = "Strength of Earth",
-    [8155] = "Stoneskin Totem",
-    [8157] = "Stoneskin",
-    [10170] = "Amplify Magic",
-    [10174] = "Dampen Magic",
-    [8163] = "Strength of Earth",
-    [19837] = "Blessing of Might",
-    [8171] = "Disease Cleansing Totem Effect",
-    [19853] = "Blessing of Wisdom",
-    [8177] = "Grounding Totem",
-    [11743] = "Detect Greater Invisibility",
-    [8181] = "Frost Resistance Totem",
-    [8185] = "Fire Resistance",
-    [17354] = "Mana Tide Totem",
-    [11767] = "Blood Pact",
-    [8230] = "Flametongue Totem Effect",
-    [10278] = "Blessing of Protection",
-    [10290] = "Devotion Aura",
-    [8250] = "Flametongue Totem Effect",
-    [10298] = "Retribution Aura",
-    [5672] = "Healing Stream",
-    [9839] = "Rejuvenation",
-    [25291] = "Blessing of Might",
-    [25299] = "Rejuvenation",
-    [1430] = "Rejuvenation",
-    [25315] = "Renew",
-    [10901] = "Power Word: Shield",
-    [20756] = "Create Soulstone (Greater)",
-    [19742] = "Blessing of Wisdom",
-    [25890] = "Greater Blessing of Light",
-    [25898] = "Greater Blessing of Kings",
-    [10929] = "Renew",
-    [10937] = "Power Word: Fortitude",
-    [592] = "Power Word: Shield",
-    [976] = "Shadow Protection",
-    [19838] = "Blessing of Might",
-    [19854] = "Blessing of Wisdom",
-    [10462] = "Healing Stream Totem",
-    [8941] = "Regrowth",
-    [10478] = "Frost Resistance Totem",
-    [7804] = "Blood Pact",
-    [8450] = "Dampen Magic",
-    [15109] = "Windwall",
-    [10526] = "Flametongue Totem",
-    [10534] = "Fire Resistance",
-    [10538] = "Fire Resistance Totem",
-    [6307] = "Blood Pact",
-    [600] = "Power Word: Shield",
-    [16191] = "Mana Tide",
-    [10598] = "Nature Resistance",
-    [1459] = "Arcane Intellect",
-    [1460] = "Arcane Intellect",
-    [10614] = "Windfury Totem",
-    [1461] = "Arcane Intellect",
-    [604] = "Dampen Magic",
-    [10626] = "Grace of Air",
-    [20757] = "Create Soulstone (Major)",
-    [20765] = "Soulstone Resurrection",
-    [25899] = "Greater Blessing of Sanctuary",
-    [6371] = "Healing Stream",
-    [6375] = "Healing Stream Totem",
-    [6377] = "Healing Stream Totem",
-    [8514] = "Windfury Totem Effect",
-    [19900] = "Fire Resistance Aura",
-    [1022] = "Blessing of Protection",
-    [6372] = "Healing Stream",
-    [10599] = "Nature Resistance",
-    [20906] = "Trueshot Aura",
-    [19898] = "Frost Resistance Aura",
-    [7805] = "Blood Pact",
-    [14818] = "Divine Spirit",
-    [10495] = "Mana Spring Totem",
-    [5394] = "Healing Stream Totem",
-    [1038] = "Blessing of Salvation",
-    [10460] = "Healing Stream",
-    [9750] = "Regrowth",
-    [15107] = "Windwall Totem",
-    [10535] = "Fire Resistance",
-    [20755] = "Create Soulstone",
-    [8938] = "Regrowth",
-    [10601] = "Nature Resistance Totem",
-    [132] = "Detect Lesser Invisibility",
-    [9756] = "Thorns",
-    [8227] = "Flametongue Totem",
-    [25895] = "Greater Blessing of Salvation",
-    [20762] = "Soulstone Resurrection",
-    [8836] = "Grace of Air",
-    [6940] = "Blessing of Sacrifice",
-    [10291] = "Devotion Aura",
-    [8182] = "Frost Resistance",
-    [10299] = "Retribution Aura",
-    [24907] = "Moonkin Aura",
-    [15108] = "Windwall",
-    [10404] = "Stoneskin",
-    [2970] = "Detect Invisibility",
-    [9857] = "Regrowth",
-    [10494] = "Mana Spring",
-    [10607] = "Windfury Totem Effect",
-    [19891] = "Fire Resistance Aura",
-    [19895] = "Shadow Resistance Aura",
-    [10596] = "Nature Resistance",
-    [8914] = "Thorns",
-    [20763] = "Soulstone Resurrection",
-    [9840] = "Rejuvenation",
-    [25909] = "Tranquil Air",
-    [20764] = "Soulstone Resurrection",
-    [1008] = "Amplify Magic",
-    [9856] = "Regrowth",
-    [17355] = "Mana Tide",
-    [10406] = "Stoneskin Totem",
-    [10408] = "Stoneskin Totem",
-    [19740] = "Blessing of Might",
-    [10898] = "Power Word: Shield",
-    [20912] = "Blessing of Sanctuary",
-    [25908] = "Tranquil Air Totem",
-    [20914] = "Blessing of Sanctuary",
-    [10403] = "Stoneskin",
-    [10407] = "Stoneskin Totem",
-    [10442] = "Strength of Earth Totem",
-    [1244] = "Power Word: Fortitude",
-    [25916] = "Greater Blessing of Might",
-    [1245] = "Power Word: Fortitude",
-    [10938] = "Power Word: Fortitude",
-    [693] = "Create Soulstone (Minor)",
-    [7294] = "Retribution Aura",
-    [14819] = "Divine Spirit",
-    [8910] = "Rejuvenation",
-    [10958] = "Shadow Protection",
-    [19897] = "Frost Resistance Aura",
-    [10899] = "Power Word: Shield",
-    [8075] = "Strength of Earth Totem",
-    [10463] = "Healing Stream Totem",
-    [8249] = "Flametongue Totem",
-    [19888] = "Frost Resistance Aura",
-    [19896] = "Shadow Resistance Aura",
-    [10479] = "Frost Resistance Totem",
-    [1243] = "Power Word: Fortitude",
-    [8154] = "Stoneskin Totem",
-    [10491] = "Mana Spring",
-    [8451] = "Dampen Magic",
-    [8455] = "Amplify Magic",
-    [9841] = "Rejuvenation",
-    [8072] = "Stoneskin",
-    [15110] = "Windwall",
-    [8076] = "Strength of Earth",
-    [8161] = "Strength of Earth Totem",
-    [10957] = "Shadow Protection"
+local AMPLIFY_MAGIC = "Amplify Magic"
+local ARCANE_BRILLIANCE = "Arcane Brilliance"
+local ARCANE_INTELLECT = "Arcane Intellect"
+local BATTLE_SHOUT = "Battle Shout"
+local BLESSING_OF_FREEDOM = "Blessing of Freedom"
+local BLESSING_OF_KINGS = "Blessing of Kings"
+local BLESSING_OF_LIGHT = "Blessing of Light"
+local BLESSING_OF_MIGHT = "Blessing of Might"
+local BLESSING_OF_PROTECTION = "Blessing of Protection"
+local BLESSING_OF_SACRIFICE = "Blessing of Sacrifice"
+local BLESSING_OF_SALVATION = "Blessing of Salvation"
+local BLESSING_OF_SANCTUARY = "Blessing of Sanctuary"
+local BLESSING_OF_WISDOM = "Blessing of Wisdom"
+local BLOOD_PACT = "Blood Pact"
+local CONCENTRATION_AURA = "Concentration Aura"
+local CREATE_SOULSTONE = "Create Soulstone"
+local CREATE_SOULSTONE_GREATER = "Create Soulstone (Greater)"
+local CREATE_SOULSTONE_LESSER = "Create Soulstone (Lesser)"
+local CREATE_SOULSTONE_MAJOR = "Create Soulstone (Major)"
+local CREATE_SOULSTONE_MINOR = "Create Soulstone (Minor)"
+local DAMPEN_MAGIC = "Dampen Magic"
+local DETECT_GREATER_INVISIBILITY = "Detect Greater Invisibility"
+local DETECT_INVISIBILITY = "Detect Invisibility"
+local DETECT_LESSER_INVISIBILITY = "Detect Lesser Invisibility"
+local DEVOTION_AURA = "Devotion Aura"
+local DISEASE_CLEANSING_TOTEM = "Disease Cleansing Totem"
+local DISEASE_CLEANSING_TOTEM_EFFECT = "Disease Cleansing Totem Effect"
+local DIVINE_SPIRIT = "Divine Spirit"
+local FEAR_WARD = "Fear Ward"
+local FIRE_RESISTANCE = "Fire Resistance"
+local FIRE_RESISTANCE_AURA = "Fire Resistance Aura"
+local FIRE_RESISTANCE_TOTEM = "Fire Resistance Totem"
+local FLAMETONGUE_TOTEM = "Flametongue Totem"
+local FLAMETONGUE_TOTEM_EFFECT = "Flametongue Totem Effect"
+local FROST_RESISTANCE = "Frost Resistance"
+local FROST_RESISTANCE_AURA = "Frost Resistance Aura"
+local FROST_RESISTANCE_TOTEM = "Frost Resistance Totem"
+local GRACE_OF_AIR = "Grace of Air"
+local GRACE_OF_AIR_TOTEM = "Grace of Air Totem"
+local GREATER_BLESSING_OF_KINGS = "Greater Blessing of Kings"
+local GREATER_BLESSING_OF_LIGHT = "Greater Blessing of Light"
+local GREATER_BLESSING_OF_MIGHT = "Greater Blessing of Might"
+local GREATER_BLESSING_OF_SALVATION = "Greater Blessing of Salvation"
+local GREATER_BLESSING_OF_SANCTUARY = "Greater Blessing of Sanctuary"
+local GREATER_BLESSING_OF_WISDOM = "Greater Blessing of Wisdom"
+local GROUNDING_TOTEM = "Grounding Totem"
+local GROUNDING_TOTEM_EFFECT = "Grounding Totem Effect"
+local HEALING_STREAM = "Healing Stream"
+local HEALING_STREAM_TOTEM = "Healing Stream Totem"
+local MANA_SPRING = "Mana Spring"
+local MANA_SPRING_TOTEM = "Mana Spring Totem"
+local MANA_TIDE = "Mana Tide"
+local MANA_TIDE_TOTEM = "Mana Tide Totem"
+local MOONKIN_AURA = "Moonkin Aura"
+local MOONKIN_FORM = "Moonkin Form"
+local NATURE_RESISTANCE = "Nature Resistance"
+local NATURE_RESISTANCE_TOTEM = "Nature Resistance Totem"
+local POISON_CLEANSING_TOTEM = "Poison Cleansing Totem"
+local POISON_CLEANSING_TOTEM_EFFECT = "Poison Cleansing Totem Effect"
+local POWER_INFUSION = "Power Infusion"
+local POWER_WORD_FORTITUDE = "Power Word: Fortitude"
+local POWER_WORD_SHIELD = "Power Word: Shield"
+local PRAYER_OF_SHADOW_PROTECTION = "Prayer of Shadow Protection"
+local PRAYER_OF_SPIRIT = "Prayer of Spirit"
+local REGROWTH = "Regrowth"
+local REJUVENATION = "Rejuvenation"
+local RENEW = "Renew"
+local RETRIBUTION_AURA = "Retribution Aura"
+local SHADOW_PROTECTION = "Shadow Protection"
+local SHADOW_RESISTANCE_AURA = "Shadow Resistance Aura"
+local SOULSTONE_RESURRECTION = "Soulstone Resurrection"
+local STONESKIN = "Stoneskin"
+local STONESKIN_TOTEM = "Stoneskin Totem"
+local STRENGTH_OF_EARTH = "Strength of Earth"
+local STRENGTH_OF_EARTH_TOTEM = "Strength of Earth Totem"
+local THORNS = "Thorns"
+local TRANQUIL_AIR = "Tranquil Air"
+local TRANQUIL_AIR_TOTEM = "Tranquil Air Totem"
+local TREMOR_TOTEM = "Tremor Totem"
+local TREMOR_TOTEM_EFFECT = "Tremor Totem Effect"
+local TRUESHOT_AURA = "Trueshot Aura"
+local UNENDING_BREATH = "Unending Breath"
+local WATER_BREATHING = "Water Breathing"
+local WATER_WALKING = "Water Walking"
+local WINDFURY_TOTEM = "Windfury Totem"
+local WINDFURY_TOTEM_EFFECT = "Windfury Totem Effect"
+local WINDWALL = "Windwall"
+local WINDWALL_TOTEM = "Windwall Totem"
+
+local SPELL_INFO_NAME = {
+    [17] = POWER_WORD_SHIELD,
+    [131] = WATER_BREATHING,
+    [132] = DETECT_LESSER_INVISIBILITY,
+    [139] = RENEW,
+    [465] = DEVOTION_AURA,
+    [467] = THORNS,
+    [546] = WATER_WALKING,
+    [592] = POWER_WORD_SHIELD,
+    [600] = POWER_WORD_SHIELD,
+    [604] = DAMPEN_MAGIC,
+    [643] = DEVOTION_AURA,
+    [693] = CREATE_SOULSTONE_MINOR,
+    [774] = REJUVENATION,
+    [782] = THORNS,
+    [976] = SHADOW_PROTECTION,
+    [1008] = AMPLIFY_MAGIC,
+    [1022] = BLESSING_OF_PROTECTION,
+    [1032] = DEVOTION_AURA,
+    [1038] = BLESSING_OF_SALVATION,
+    [1044] = BLESSING_OF_FREEDOM,
+    [1058] = REJUVENATION,
+    [1075] = THORNS,
+    [1243] = POWER_WORD_FORTITUDE,
+    [1244] = POWER_WORD_FORTITUDE,
+    [1245] = POWER_WORD_FORTITUDE,
+    [1430] = REJUVENATION,
+    [1459] = ARCANE_INTELLECT,
+    [1460] = ARCANE_INTELLECT,
+    [1461] = ARCANE_INTELLECT,
+    [2090] = REJUVENATION,
+    [2091] = REJUVENATION,
+    [2791] = POWER_WORD_FORTITUDE,
+    [2970] = DETECT_INVISIBILITY,
+    [3627] = REJUVENATION,
+    [3747] = POWER_WORD_SHIELD,
+    [5242] = BATTLE_SHOUT,
+    [5394] = HEALING_STREAM_TOTEM,
+    [5599] = BLESSING_OF_PROTECTION,
+    [5672] = HEALING_STREAM,
+    [5675] = MANA_SPRING_TOTEM,
+    [5677] = MANA_SPRING,
+    [5697] = UNENDING_BREATH,
+    [6065] = POWER_WORD_SHIELD,
+    [6066] = POWER_WORD_SHIELD,
+    [6074] = RENEW,
+    [6075] = RENEW,
+    [6076] = RENEW,
+    [6077] = RENEW,
+    [6078] = RENEW,
+    [6192] = BATTLE_SHOUT,
+    [6307] = BLOOD_PACT,
+    [6346] = FEAR_WARD,
+    [6371] = HEALING_STREAM,
+    [6372] = HEALING_STREAM,
+    [6375] = HEALING_STREAM_TOTEM,
+    [6377] = HEALING_STREAM_TOTEM,
+    [6673] = BATTLE_SHOUT,
+    [6940] = BLESSING_OF_SACRIFICE,
+    [7294] = RETRIBUTION_AURA,
+    [7804] = BLOOD_PACT,
+    [7805] = BLOOD_PACT,
+    [8071] = STONESKIN_TOTEM,
+    [8072] = STONESKIN,
+    [8075] = STRENGTH_OF_EARTH_TOTEM,
+    [8076] = STRENGTH_OF_EARTH,
+    [8143] = TREMOR_TOTEM,
+    [8146] = TREMOR_TOTEM_EFFECT,
+    [8154] = STONESKIN_TOTEM,
+    [8155] = STONESKIN_TOTEM,
+    [8156] = STONESKIN,
+    [8157] = STONESKIN,
+    [8160] = STRENGTH_OF_EARTH_TOTEM,
+    [8161] = STRENGTH_OF_EARTH_TOTEM,
+    [8162] = STRENGTH_OF_EARTH,
+    [8163] = STRENGTH_OF_EARTH,
+    [8166] = POISON_CLEANSING_TOTEM,
+    [8168] = POISON_CLEANSING_TOTEM_EFFECT,
+    [8170] = DISEASE_CLEANSING_TOTEM,
+    [8171] = DISEASE_CLEANSING_TOTEM_EFFECT,
+    [8177] = GROUNDING_TOTEM,
+    [8178] = GROUNDING_TOTEM_EFFECT,
+    [8181] = FROST_RESISTANCE_TOTEM,
+    [8182] = FROST_RESISTANCE,
+    [8184] = FIRE_RESISTANCE_TOTEM,
+    [8185] = FIRE_RESISTANCE,
+    [8227] = FLAMETONGUE_TOTEM,
+    [8230] = FLAMETONGUE_TOTEM_EFFECT,
+    [8249] = FLAMETONGUE_TOTEM,
+    [8250] = FLAMETONGUE_TOTEM_EFFECT,
+    [8450] = DAMPEN_MAGIC,
+    [8451] = DAMPEN_MAGIC,
+    [8455] = AMPLIFY_MAGIC,
+    [8512] = WINDFURY_TOTEM,
+    [8514] = WINDFURY_TOTEM_EFFECT,
+    [8835] = GRACE_OF_AIR_TOTEM,
+    [8836] = GRACE_OF_AIR,
+    [8910] = REJUVENATION,
+    [8914] = THORNS,
+    [8936] = REGROWTH,
+    [8938] = REGROWTH,
+    [8939] = REGROWTH,
+    [8940] = REGROWTH,
+    [8941] = REGROWTH,
+    [9750] = REGROWTH,
+    [9756] = THORNS,
+    [9839] = REJUVENATION,
+    [9840] = REJUVENATION,
+    [9841] = REJUVENATION,
+    [9856] = REGROWTH,
+    [9857] = REGROWTH,
+    [9858] = REGROWTH,
+    [9910] = THORNS,
+    [10060] = POWER_INFUSION,
+    [10156] = ARCANE_INTELLECT,
+    [10157] = ARCANE_INTELLECT,
+    [10169] = AMPLIFY_MAGIC,
+    [10170] = AMPLIFY_MAGIC,
+    [10173] = DAMPEN_MAGIC,
+    [10174] = DAMPEN_MAGIC,
+    [10278] = BLESSING_OF_PROTECTION,
+    [10290] = DEVOTION_AURA,
+    [10291] = DEVOTION_AURA,
+    [10292] = DEVOTION_AURA,
+    [10293] = DEVOTION_AURA,
+    [10298] = RETRIBUTION_AURA,
+    [10299] = RETRIBUTION_AURA,
+    [10300] = RETRIBUTION_AURA,
+    [10301] = RETRIBUTION_AURA,
+    [10403] = STONESKIN,
+    [10404] = STONESKIN,
+    [10405] = STONESKIN,
+    [10406] = STONESKIN_TOTEM,
+    [10407] = STONESKIN_TOTEM,
+    [10408] = STONESKIN_TOTEM,
+    [10441] = STRENGTH_OF_EARTH,
+    [10442] = STRENGTH_OF_EARTH_TOTEM,
+    [10460] = HEALING_STREAM,
+    [10461] = HEALING_STREAM,
+    [10462] = HEALING_STREAM_TOTEM,
+    [10463] = HEALING_STREAM_TOTEM,
+    [10476] = FROST_RESISTANCE,
+    [10477] = FROST_RESISTANCE,
+    [10478] = FROST_RESISTANCE_TOTEM,
+    [10479] = FROST_RESISTANCE_TOTEM,
+    [10491] = MANA_SPRING,
+    [10493] = MANA_SPRING,
+    [10494] = MANA_SPRING,
+    [10495] = MANA_SPRING_TOTEM,
+    [10496] = MANA_SPRING_TOTEM,
+    [10497] = MANA_SPRING_TOTEM,
+    [10521] = FLAMETONGUE_TOTEM_EFFECT,
+    [10526] = FLAMETONGUE_TOTEM,
+    [10534] = FIRE_RESISTANCE,
+    [10535] = FIRE_RESISTANCE,
+    [10537] = FIRE_RESISTANCE_TOTEM,
+    [10538] = FIRE_RESISTANCE_TOTEM,
+    [10595] = NATURE_RESISTANCE_TOTEM,
+    [10596] = NATURE_RESISTANCE,
+    [10598] = NATURE_RESISTANCE,
+    [10599] = NATURE_RESISTANCE,
+    [10600] = NATURE_RESISTANCE_TOTEM,
+    [10601] = NATURE_RESISTANCE_TOTEM,
+    [10607] = WINDFURY_TOTEM_EFFECT,
+    [10611] = WINDFURY_TOTEM_EFFECT,
+    [10613] = WINDFURY_TOTEM,
+    [10614] = WINDFURY_TOTEM,
+    [10626] = GRACE_OF_AIR,
+    [10627] = GRACE_OF_AIR_TOTEM,
+    [10898] = POWER_WORD_SHIELD,
+    [10899] = POWER_WORD_SHIELD,
+    [10900] = POWER_WORD_SHIELD,
+    [10901] = POWER_WORD_SHIELD,
+    [10927] = RENEW,
+    [10928] = RENEW,
+    [10929] = RENEW,
+    [10937] = POWER_WORD_FORTITUDE,
+    [10938] = POWER_WORD_FORTITUDE,
+    [10957] = SHADOW_PROTECTION,
+    [10958] = SHADOW_PROTECTION,
+    [11549] = BATTLE_SHOUT,
+    [11550] = BATTLE_SHOUT,
+    [11551] = BATTLE_SHOUT,
+    [11743] = DETECT_GREATER_INVISIBILITY,
+    [11766] = BLOOD_PACT,
+    [11767] = BLOOD_PACT,
+    [14752] = DIVINE_SPIRIT,
+    [14818] = DIVINE_SPIRIT,
+    [14819] = DIVINE_SPIRIT,
+    [15036] = FLAMETONGUE_TOTEM_EFFECT,
+    [15107] = WINDWALL_TOTEM,
+    [15108] = WINDWALL,
+    [15109] = WINDWALL,
+    [15110] = WINDWALL,
+    [15111] = WINDWALL_TOTEM,
+    [15112] = WINDWALL_TOTEM,
+    [16190] = MANA_TIDE_TOTEM,
+    [16191] = MANA_TIDE,
+    [16387] = FLAMETONGUE_TOTEM,
+    [17354] = MANA_TIDE_TOTEM,
+    [17355] = MANA_TIDE,
+    [17359] = MANA_TIDE_TOTEM,
+    [17360] = MANA_TIDE,
+    [19506] = TRUESHOT_AURA,
+    [19740] = BLESSING_OF_MIGHT,
+    [19742] = BLESSING_OF_WISDOM,
+    [19746] = CONCENTRATION_AURA,
+    [19834] = BLESSING_OF_MIGHT,
+    [19835] = BLESSING_OF_MIGHT,
+    [19836] = BLESSING_OF_MIGHT,
+    [19837] = BLESSING_OF_MIGHT,
+    [19838] = BLESSING_OF_MIGHT,
+    [19850] = BLESSING_OF_WISDOM,
+    [19852] = BLESSING_OF_WISDOM,
+    [19853] = BLESSING_OF_WISDOM,
+    [19854] = BLESSING_OF_WISDOM,
+    [19876] = SHADOW_RESISTANCE_AURA,
+    [19888] = FROST_RESISTANCE_AURA,
+    [19891] = FIRE_RESISTANCE_AURA,
+    [19895] = SHADOW_RESISTANCE_AURA,
+    [19896] = SHADOW_RESISTANCE_AURA,
+    [19897] = FROST_RESISTANCE_AURA,
+    [19898] = FROST_RESISTANCE_AURA,
+    [19899] = FIRE_RESISTANCE_AURA,
+    [19900] = FIRE_RESISTANCE_AURA,
+    [19977] = BLESSING_OF_LIGHT,
+    [19978] = BLESSING_OF_LIGHT,
+    [19979] = BLESSING_OF_LIGHT,
+    [20217] = BLESSING_OF_KINGS,
+    [20707] = SOULSTONE_RESURRECTION,
+    [20729] = BLESSING_OF_SACRIFICE,
+    [20752] = CREATE_SOULSTONE_LESSER,
+    [20755] = CREATE_SOULSTONE,
+    [20756] = CREATE_SOULSTONE_GREATER,
+    [20757] = CREATE_SOULSTONE_MAJOR,
+    [20762] = SOULSTONE_RESURRECTION,
+    [20763] = SOULSTONE_RESURRECTION,
+    [20764] = SOULSTONE_RESURRECTION,
+    [20765] = SOULSTONE_RESURRECTION,
+    [20905] = TRUESHOT_AURA,
+    [20906] = TRUESHOT_AURA,
+    [20911] = BLESSING_OF_SANCTUARY,
+    [20912] = BLESSING_OF_SANCTUARY,
+    [20913] = BLESSING_OF_SANCTUARY,
+    [20914] = BLESSING_OF_SANCTUARY,
+    [23028] = ARCANE_BRILLIANCE,
+    [24858] = MOONKIN_FORM,
+    [24907] = MOONKIN_AURA,
+    [25289] = BATTLE_SHOUT,
+    [25290] = BLESSING_OF_WISDOM,
+    [25291] = BLESSING_OF_MIGHT,
+    [25299] = REJUVENATION,
+    [25315] = RENEW,
+    [25359] = GRACE_OF_AIR_TOTEM,
+    [25360] = GRACE_OF_AIR,
+    [25361] = STRENGTH_OF_EARTH_TOTEM,
+    [25362] = STRENGTH_OF_EARTH,
+    [25782] = GREATER_BLESSING_OF_MIGHT,
+    [25890] = GREATER_BLESSING_OF_LIGHT,
+    [25894] = GREATER_BLESSING_OF_WISDOM,
+    [25895] = GREATER_BLESSING_OF_SALVATION,
+    [25898] = GREATER_BLESSING_OF_KINGS,
+    [25899] = GREATER_BLESSING_OF_SANCTUARY,
+    [25908] = TRANQUIL_AIR_TOTEM,
+    [25909] = TRANQUIL_AIR,
+    [25916] = GREATER_BLESSING_OF_MIGHT,
+    [25918] = GREATER_BLESSING_OF_WISDOM,
+    [27681] = PRAYER_OF_SPIRIT,
+    [27683] = PRAYER_OF_SHADOW_PROTECTION,
+    [27841] = DIVINE_SPIRIT
+}
+
+local SPELL_INFO_CLASS = {
+    [17] = 5,
+    [131] = 7,
+    [132] = 9,
+    [139] = 5,
+    [465] = 2,
+    [467] = 11,
+    [546] = 7,
+    [592] = 5,
+    [600] = 5,
+    [604] = 8,
+    [643] = 2,
+    [693] = 9,
+    [774] = 11,
+    [782] = 11,
+    [976] = 5,
+    [1008] = 8,
+    [1022] = 2,
+    [1032] = 2,
+    [1038] = 2,
+    [1044] = 2,
+    [1058] = 11,
+    [1075] = 11,
+    [1243] = 5,
+    [1244] = 5,
+    [1245] = 5,
+    [1430] = 11,
+    [1459] = 8,
+    [1460] = 8,
+    [1461] = 8,
+    [2090] = 11,
+    [2091] = 11,
+    [2791] = 5,
+    [2970] = 9,
+    [3627] = 11,
+    [3747] = 5,
+    [5242] = 1,
+    [5394] = 7,
+    [5599] = 2,
+    [5672] = 7,
+    [5675] = 7,
+    [5677] = 7,
+    [5697] = 9,
+    [6065] = 5,
+    [6066] = 5,
+    [6074] = 5,
+    [6075] = 5,
+    [6076] = 5,
+    [6077] = 5,
+    [6078] = 5,
+    [6192] = 1,
+    [6307] = 9,
+    [6346] = 5,
+    [6371] = 7,
+    [6372] = 7,
+    [6375] = 7,
+    [6377] = 7,
+    [6673] = 1,
+    [6940] = 2,
+    [7294] = 2,
+    [7804] = 9,
+    [7805] = 9,
+    [8071] = 7,
+    [8072] = 7,
+    [8075] = 7,
+    [8076] = 7,
+    [8143] = 7,
+    [8146] = 7,
+    [8154] = 7,
+    [8155] = 7,
+    [8156] = 7,
+    [8157] = 7,
+    [8160] = 7,
+    [8161] = 7,
+    [8162] = 7,
+    [8163] = 7,
+    [8166] = 7,
+    [8168] = 7,
+    [8170] = 7,
+    [8171] = 7,
+    [8177] = 7,
+    [8178] = 7,
+    [8181] = 7,
+    [8182] = 7,
+    [8184] = 7,
+    [8185] = 7,
+    [8227] = 7,
+    [8230] = 7,
+    [8249] = 7,
+    [8250] = 7,
+    [8450] = 8,
+    [8451] = 8,
+    [8455] = 8,
+    [8512] = 7,
+    [8514] = 7,
+    [8835] = 7,
+    [8836] = 7,
+    [8910] = 11,
+    [8914] = 11,
+    [8936] = 11,
+    [8938] = 11,
+    [8939] = 11,
+    [8940] = 11,
+    [8941] = 11,
+    [9750] = 11,
+    [9756] = 11,
+    [9839] = 11,
+    [9840] = 11,
+    [9841] = 11,
+    [9856] = 11,
+    [9857] = 11,
+    [9858] = 11,
+    [9910] = 11,
+    [10060] = 5,
+    [10156] = 8,
+    [10157] = 8,
+    [10169] = 8,
+    [10170] = 8,
+    [10173] = 8,
+    [10174] = 8,
+    [10278] = 2,
+    [10290] = 2,
+    [10291] = 2,
+    [10292] = 2,
+    [10293] = 2,
+    [10298] = 2,
+    [10299] = 2,
+    [10300] = 2,
+    [10301] = 2,
+    [10403] = 7,
+    [10404] = 7,
+    [10405] = 7,
+    [10406] = 7,
+    [10407] = 7,
+    [10408] = 7,
+    [10441] = 7,
+    [10442] = 7,
+    [10460] = 7,
+    [10461] = 7,
+    [10462] = 7,
+    [10463] = 7,
+    [10476] = 7,
+    [10477] = 7,
+    [10478] = 7,
+    [10479] = 7,
+    [10491] = 7,
+    [10493] = 7,
+    [10494] = 7,
+    [10495] = 7,
+    [10496] = 7,
+    [10497] = 7,
+    [10521] = 7,
+    [10526] = 7,
+    [10534] = 7,
+    [10535] = 7,
+    [10537] = 7,
+    [10538] = 7,
+    [10595] = 7,
+    [10596] = 7,
+    [10598] = 7,
+    [10599] = 7,
+    [10600] = 7,
+    [10601] = 7,
+    [10607] = 7,
+    [10611] = 7,
+    [10613] = 7,
+    [10614] = 7,
+    [10626] = 7,
+    [10627] = 7,
+    [10898] = 5,
+    [10899] = 5,
+    [10900] = 5,
+    [10901] = 5,
+    [10927] = 5,
+    [10928] = 5,
+    [10929] = 5,
+    [10937] = 5,
+    [10938] = 5,
+    [10957] = 5,
+    [10958] = 5,
+    [11549] = 1,
+    [11550] = 1,
+    [11551] = 1,
+    [11743] = 9,
+    [11766] = 9,
+    [11767] = 9,
+    [14752] = 5,
+    [14818] = 5,
+    [14819] = 5,
+    [15036] = 7,
+    [15107] = 7,
+    [15108] = 7,
+    [15109] = 7,
+    [15110] = 7,
+    [15111] = 7,
+    [15112] = 7,
+    [16190] = 7,
+    [16191] = 7,
+    [16387] = 7,
+    [17354] = 7,
+    [17355] = 7,
+    [17359] = 7,
+    [17360] = 7,
+    [19506] = 3,
+    [19740] = 2,
+    [19742] = 2,
+    [19746] = 2,
+    [19834] = 2,
+    [19835] = 2,
+    [19836] = 2,
+    [19837] = 2,
+    [19838] = 2,
+    [19850] = 2,
+    [19852] = 2,
+    [19853] = 2,
+    [19854] = 2,
+    [19876] = 2,
+    [19888] = 2,
+    [19891] = 2,
+    [19895] = 2,
+    [19896] = 2,
+    [19897] = 2,
+    [19898] = 2,
+    [19899] = 2,
+    [19900] = 2,
+    [19977] = 2,
+    [19978] = 2,
+    [19979] = 2,
+    [20217] = 2,
+    [20707] = 9,
+    [20729] = 2,
+    [20752] = 9,
+    [20755] = 9,
+    [20756] = 9,
+    [20757] = 9,
+    [20762] = 9,
+    [20763] = 9,
+    [20764] = 9,
+    [20765] = 9,
+    [20905] = 3,
+    [20906] = 3,
+    [20911] = 2,
+    [20912] = 2,
+    [20913] = 2,
+    [20914] = 2,
+    [23028] = 8,
+    [24858] = 11,
+    [24907] = 11,
+    [25289] = 1,
+    [25290] = 2,
+    [25291] = 2,
+    [25299] = 11,
+    [25315] = 5,
+    [25359] = 7,
+    [25360] = 7,
+    [25361] = 7,
+    [25362] = 7,
+    [25782] = 2,
+    [25890] = 2,
+    [25894] = 2,
+    [25895] = 2,
+    [25898] = 2,
+    [25899] = 2,
+    [25908] = 7,
+    [25909] = 7,
+    [25916] = 2,
+    [25918] = 2,
+    [27681] = 5,
+    [27683] = 5,
+    [27841] = 4
+}
+
+local SPELL_INFO_RACE = {
+    [6346] = 3
+}
+
+local SPELL_INFO_TALENT = {
+    [10060] = {1, 15, 7, 2},
+    [19506] = {2, 14, 7, 2},
+    [20217] = {2, 6, 3, 1},
+    [20911] = {2, 12, 5, 2},
+    [20912] = {2, 12, 5, 2},
+    [20913] = {2, 12, 5, 2},
+    [20914] = {2, 12, 5, 2},
+    [25898] = {2, 6, 3, 1},
+    [25899] = {2, 12, 5, 2}
 }
 
 local BUFFS = {
@@ -1255,6 +1638,18 @@ local BUFFS = {
             782,
             782
         }
+    },
+    {
+        {
+            546,
+            546
+        }
+    },
+    {
+        {
+            10060,
+            10060
+        }
     }
 }
 
@@ -1315,6 +1710,26 @@ function BuffFamily.prototype:GetName(enUS)
     return self.buff:GetAuraName(enUS)
 end
 
+function BuffFamily.prototype:GetClassID()
+    return self.buff:GetClassID()
+end
+
+function BuffFamily.prototype:GetClassName()
+    return self.buff:GetClassName()
+end
+
+function BuffFamily.prototype:GetRaceID()
+    return self.buff:GetRaceID()
+end
+
+function BuffFamily.prototype:GetRaceName()
+    return self.buff:GetRaceName()
+end
+
+function BuffFamily.prototype:GetTalentLocation()
+    return self.buff:GetTalentLocation()
+end
+
 function BuffFamily.prototype:AddBuff(buff)
     BuffFamily.database[buff] = self
     BuffFamily.database[buff:GetSpellID()] = self
@@ -1358,9 +1773,10 @@ Buff.metatable = {
 Buff.database = setmetatable({}, DatabaseMetatable)
 
 local function extract(data)
+    assert(GetLocale() ~= "enUS" or data:GetSpellName() == SPELL_INFO_NAME[data:GetSpellID()])
     return {
         id = data:GetSpellID(),
-        name = data:GetSpellName(),
+        name = GetLocale() ~= "enUS" and data:GetSpellName() or SPELL_INFO_NAME[data:GetSpellID()],
         rank = tonumber(strmatch(data:GetSpellSubtext(), gsub(TOOLTIP_TALENT_RANK_CURRENT_ONLY, "%%d", "(%%d)")))
     }
 end
@@ -1412,12 +1828,71 @@ function Buff.prototype:GetFamilyName(enUS)
     return self:GetFamily():GetName(enUS)
 end
 
+function Buff.prototype:GetClassID()
+    return SPELL_INFO_CLASS[self.spell.id]
+end
+
+do
+    local CLASS_INFO = {
+        [1] = {"Warrior", "WARRIOR"},
+        [2] = {"Paladin", "PALADIN"},
+        [3] = {"Hunter", "HUNTER"},
+        [4] = {"Rogue", "ROGUE"},
+        [5] = {"Priest", "PRIEST"},
+        [7] = {"Shaman", "SHAMAN"},
+        [8] = {"Mage", "MAGE"},
+        [9] = {"Warlock", "WARLOCK"},
+        [11] = {"Druid", "DRUID"}
+    }
+
+    function Buff.prototype:GetClassName(enUS)
+        if enUS then
+            return unpack(CLASS_INFO[self:GetClassID()])
+        end
+
+        local classInfo = C_CreatureInfo.GetClassInfo(self:GetClassID())
+        return classInfo.className, classInfo.classFile
+    end
+end
+
+function Buff.prototype:GetRaceID()
+    return SPELL_INFO_RACE[self.spell.id]
+end
+
+do
+    local RACE_INFO = {
+        [1] = {"Human", "Human"},
+        [2] = {"Orc", "Orc"},
+        [3] = {"Dwarf", "Dwarf"},
+        [4] = {"Night Elf", "NightElf"},
+        [5] = {"Undead", "Scourge"},
+        [6] = {"Tauren", "Tauren"},
+        [7] = {"Gnome", "Gnome"},
+        [8] = {"Troll", "Troll"}
+    }
+
+    function Buff.prototype:GetRaceName(enUS)
+        if enUS then
+            return unpack(RACE_INFO[self:GetRaceID()])
+        end
+
+        local raceInfo = C_CreatureInfo.GetRaceInfo(self:GetRaceID())
+        return raceInfo.raceName, raceInfo.clientFileString
+    end
+end
+
+function Buff.prototype:GetTalentLocation()
+    if SPELL_INFO_TALENT[self.spell.id] then
+        return unpack(SPELL_INFO_TALENT[self.spell.id])
+    end
+end
+
 function Buff.prototype:GetSpellID()
     return self.spell.id
 end
 
 function Buff.prototype:GetSpellName(enUS)
-    return enUS and NAMES[self.spell.id] or self.spell.name
+    return enUS and SPELL_INFO_NAME[self.spell.id] or self.spell.name
 end
 
 function Buff.prototype:GetSpellRank()
@@ -1439,7 +1914,7 @@ function Buff.prototype:GetAuraID()
 end
 
 function Buff.prototype:GetAuraName(enUS)
-    return enUS and NAMES[self.aura.id] or self.aura.name
+    return enUS and SPELL_INFO_NAME[self.aura.id] or self.aura.name
 end
 
 function Buff.prototype:GetAuraRank()
@@ -1576,17 +2051,25 @@ eventFrame:SetScript(
         if not buffFamily then
             return
         else
-            local buffKnown = false
+            local _, _, classID = UnitClass("player")
+            if classID ~= buffFamily:GetClassID() then
+                return
+            end
 
-            for _, buff in ipairs(buffFamily:GetBuffs()) do
-                if GetSpellInfo(buff:GetSpellName()) then
-                    buffKnown = true
-                    break
+            local buffFamilyRaceID = buffFamily:GetRaceID()
+            if buffFamilyRaceID then
+                local _, _, raceID = UnitRace("player")
+                if raceID ~= buffFamilyRaceID then
+                    return
                 end
             end
 
-            if not buffKnown then
-                return
+            local buffFamilyTalentTab, buffFamilyTalentIndex = buffFamily:GetTalentLocation()
+            if buffFamilyTalentTab then
+                local _, _, _, _, rank = GetTalentInfo(buffFamilyTalentTab, buffFamilyTalentIndex)
+                if not rank or rank == 0 then
+                    return
+                end
             end
         end
 
@@ -1732,17 +2215,26 @@ local function BuffMe(cmd)
 
                 if not duration or expirationTime == 0 or expirationTime > GetTime() + duration then
                     if not silent then
+                        local _, buffFamilyClass = buffFamily:GetClassName(true)
+                        local what = RAID_CLASS_COLORS[buffFamilyClass]:WrapTextInColorCode(auraName)
+
                         if UnitIsUnit(unit, "player") then
-                            print(PRINT_PREFIX, format("You already have \124cffffff00%s\124r.", auraName))
+                            print(PRINT_PREFIX, format("You already have %s.", what))
                         else
                             local who = unit
+
+                            local raidIndex = UnitInRaid(unit)
+                            if raidIndex then
+                                local _, _, subgroup = GetRaidRosterInfo(raidIndex)
+                                who = format("%s (Group %d)", unit, subgroup)
+                            end
 
                             local _, class = UnitClass(unit)
                             if class then
                                 who = RAID_CLASS_COLORS[class]:WrapTextInColorCode(who)
                             end
 
-                            print(PRINT_PREFIX, format("%s already has \124cffffff00%s\124r.", who, auraName))
+                            print(PRINT_PREFIX, format("%s already has %s.", who, what))
                         end
                     end
 
@@ -1751,26 +2243,82 @@ local function BuffMe(cmd)
             end
         end
 
+        local buffFamilyName = buffFamily:GetName(true)
+        local buffFamilyClassID = buffFamily:GetClassID()
+        local _, buffFamilyClass = buffFamily:GetClassName(true)
+        local _, targetClass, targetClassID
+
+        if target then
+            local targetKnowsBuff = true
+
+            _, targetClass, targetClassID = UnitClass(target)
+
+            if targetClass then
+                if targetClassID ~= buffFamilyClassID then
+                    targetKnowsBuff = false
+                end
+            end
+
+            if targetKnowsBuff then
+                local buffFamilyRaceID = buffFamily:GetRaceID()
+                if buffFamilyRaceID then
+                    local _, targetRace, targetRaceID = UnitClass(target)
+                    if targetRace and targetRaceID ~= buffFamilyRaceID then
+                        targetKnowsBuff = false
+                    end
+                end
+            end
+
+            if targetKnowsBuff then
+                local buffFamilyTalentTab, _, buffFamilyTalentTier, buffFamilyTalentColumn = buffFamily:GetTalentLocation()
+                if buffFamilyTalentTab then
+                    local talents = Details and Details:GetTalents(UnitGUID(target))
+                    if talents then
+                        targetKnowsBuff = false
+                        for _, talent in ipairs(talents) do
+                            local _, rank, tier, column, tabIndex = unpack(talent)
+                            if tabIndex == buffFamilyTalentTab and tier == buffFamilyTalentTier and column == buffFamilyTalentColumn then
+                                if rank and rank > 0 then
+                                    targetKnowsBuff = true
+                                    break
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+
+            if not targetKnowsBuff then
+                if not silent then
+                    local who = RAID_CLASS_COLORS[targetClass]:WrapTextInColorCode(target)
+                    local what = RAID_CLASS_COLORS[buffFamilyClass]:WrapTextInColorCode(buffFamilyName)
+
+                    print(PRINT_PREFIX, format("%s cannot buff %s!", who, what))
+                end
+
+                return
+            end
+        end
+
         if not silent then
-            local buffFamilyName = buffFamily:GetName(true)
+            local what = RAID_CLASS_COLORS[buffFamilyClass]:WrapTextInColorCode(buffFamilyName)
 
             if not target then
-                print(PRINT_PREFIX, format("Requesting \124cffffff00%s\124r...", buffFamilyName))
+                print(PRINT_PREFIX, format("Requesting %s...", what))
             else
-                local from = target
+                local who = target
 
                 local raidIndex = UnitInRaid(target)
                 if raidIndex then
                     local _, _, subgroup = GetRaidRosterInfo(raidIndex)
-                    from = format("%s (Group %d)", target, subgroup)
+                    who = format("%s (Group %d)", target, subgroup)
                 end
 
-                local _, class = UnitClass(target)
-                if class then
-                    from = RAID_CLASS_COLORS[class]:WrapTextInColorCode(from)
+                if targetClass then
+                    who = RAID_CLASS_COLORS[targetClass]:WrapTextInColorCode(who)
                 end
 
-                print(PRINT_PREFIX, format("Requesting \124cffffff00%s\124r from %s...", buffFamilyName, from))
+                print(PRINT_PREFIX, format("Requesting %s from %s...", what, who))
             end
         end
 
