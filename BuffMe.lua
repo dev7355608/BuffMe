@@ -1258,12 +1258,11 @@ local BUFFS = {
 }
 
 local DatabaseMetatable = {
+    __newindex = function(t, k, v)
+        return rawset(t, tonumber(k) or type(k) == "string" and strlower(strtrim(k)) or k, v)
+    end,
     __index = function(t, k)
-        if tonumber(k) then
-            return rawget(t, tonumber(k))
-        elseif type(k) == "string" then
-            return rawget(t, strlower(strtrim(k)))
-        end
+        return rawget(t, tonumber(k) or type(k) == "string" and strlower(strtrim(k)) or k)
     end,
     __metatable = true
 }
