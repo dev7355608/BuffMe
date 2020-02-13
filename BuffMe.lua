@@ -14,6 +14,7 @@ local GetNormalizedRealmName = GetNormalizedRealmName
 local GetNumGroupMembers = GetNumGroupMembers
 local GetTalentInfo = GetTalentInfo
 local GetLocale = GetLocale
+local GetChatWindowInfo = GetChatWindowInfo
 local Ambiguate = Ambiguate
 local SecureCmdOptionParse = SecureCmdOptionParse
 local C_Timer = C_Timer
@@ -23,8 +24,10 @@ local format = format
 local strlower = strlower
 local strtrim = strtrim
 local strsplit = strsplit
+local strjoin = strjoin
 local strmatch = strmatch
 local gsub = gsub
+local tostringall = tostringall
 local tinsert = tinsert
 local tremove = tremove
 local tContains = tContains
@@ -2006,7 +2009,27 @@ do
     loadNext(next(BUFFS))
 end
 
-local PRINT_PREFIX = "<\124cffff4040BuffMe\124r>"
+local PRINT_PREFIX = "\124cffff8080<\124cffff4040BuffMe\124cffff8080>\124r"
+
+local function BuffMe_Print(...)
+    local message = strjoin(" ", PRINT_PREFIX, tostringall(...))
+    local tab
+
+    for i = 1, 10 do
+        if GetChatWindowInfo(i) == "BuffMe" then
+            tab = i
+            break
+        end
+    end
+
+    local chatFrame = tab and _G["ChatFrame" .. tab] or DEFAULT_CHAT_FRAME
+    chatFrame:AddMessage(message, 1.0, 0.84, 0.73)
+
+    if not chatFrame:IsShown() then
+        FCF_StartAlertFlash(chatFrame)
+    end
+end
+
 local RAID_WARNING_FORMAT = "%s   --->   %s"
 local RAID_WARNING_WITH_GROUP_FORMAT = RAID_WARNING_FORMAT .. " (" .. GROUP_NUMBER .. ")"
 
@@ -2117,14 +2140,14 @@ local function BuffMe(cmd)
 
     if target then
         if not UnitExists(target) or not GetUnitName(target, true) then
-            print(PRINT_PREFIX, format("\124cffff0000Unknown target '\124r%s\124cffff0000'", target))
+            BuffMe_Print(format("\124cffff0000Unknown target '\124r%s\124cffff0000'", target))
             return
         end
 
         targetName = GetUnitName(target, true)
 
         if not UnitIsPlayer(target) or not UnitCanAssist("player", target) then
-            print(PRINT_PREFIX, format("\124cffff0000Invalid target '\124r%s\124cffff0000'", targetName))
+            BuffMe_Print(format("\124cffff0000Invalid target '\124r%s\124cffff0000'", targetName))
             return
         end
     end
@@ -2133,7 +2156,7 @@ local function BuffMe(cmd)
         local buffFamily = BuffFamily:Get(spell)
 
         if not buffFamily then
-            print(PRINT_PREFIX, format("\124cffff0000Unknown buff '\124r%s\124cffff0000'", spell))
+            BuffMe_Print(format("\124cffff0000Unknown buff '\124r%s\124cffff0000'", spell))
             return
         end
 
@@ -2177,7 +2200,7 @@ local function BuffMe(cmd)
                         local what = RAID_CLASS_COLORS[buffFamilyClass]:WrapTextInColorCode(auraName)
 
                         if UnitIsUnit(unit, "player") then
-                            print(PRINT_PREFIX, format("You already have %s.", what))
+                            BuffMe_Print(format("You already have %s.", what))
                         else
                             local who = unitName
 
@@ -2192,7 +2215,7 @@ local function BuffMe(cmd)
                                 who = RAID_CLASS_COLORS[class]:WrapTextInColorCode(who)
                             end
 
-                            print(PRINT_PREFIX, format("%s already has %s.", who, what))
+                            BuffMe_Print(format("%s already has %s.", who, what))
                         end
                     end
 
@@ -2251,7 +2274,7 @@ local function BuffMe(cmd)
                     local who = RAID_CLASS_COLORS[targetClass]:WrapTextInColorCode(targetName)
                     local what = RAID_CLASS_COLORS[buffFamilyClass]:WrapTextInColorCode(buffFamilyName)
 
-                    print(PRINT_PREFIX, format("%s cannot buff %s!", who, what))
+                    BuffMe_Print(format("%s cannot buff %s!", who, what))
                 end
 
                 return
@@ -2262,7 +2285,7 @@ local function BuffMe(cmd)
             local what = RAID_CLASS_COLORS[buffFamilyClass]:WrapTextInColorCode(buffFamilyName)
 
             if not target then
-                print(PRINT_PREFIX, format("Requesting %s...", what))
+                BuffMe_Print(format("Requesting %s...", what))
             else
                 local who = targetName
 
@@ -2276,7 +2299,7 @@ local function BuffMe(cmd)
                     who = RAID_CLASS_COLORS[targetClass]:WrapTextInColorCode(who)
                 end
 
-                print(PRINT_PREFIX, format("Requesting %s from %s...", what, who))
+                BuffMe_Print(format("Requesting %s from %s...", what, who))
             end
         end
 
