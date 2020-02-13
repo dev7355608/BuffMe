@@ -2108,30 +2108,32 @@ eventFrame:SetScript(
 C_ChatInfo.RegisterAddonMessagePrefix("BuffMe")
 
 local function BuffMe(cmd)
-    local unit = GetUnitName("player", true)
+    local unit = "player"
+    local unitName = GetUnitName(unit, true)
     local result, target = SecureCmdOptionParse(cmd)
+    local targetName
     local duration = nil
     local silent = false
 
     if target then
         if not UnitExists(target) or not GetUnitName(target, true) then
-            print(PRINT_PREFIX, format("\124cffff0000Unknown target:\124r %s", target))
+            print(PRINT_PREFIX, format("\124cffff0000Unknown target '\124r%s\124cffff0000'", target))
             return
         end
+
+        targetName = GetUnitName(target, true)
 
         if not UnitIsPlayer(target) or not UnitCanAssist("player", target) then
-            print(PRINT_PREFIX, format("\124cffff0000Invalid target:\124r %s", target))
+            print(PRINT_PREFIX, format("\124cffff0000Invalid target '\124r%s\124cffff0000'", targetName))
             return
         end
-
-        target = GetUnitName(target, true)
     end
 
     for _, spell in ipairs({strsplit(",", result)}) do
         local buffFamily = BuffFamily:Get(spell)
 
         if not buffFamily then
-            print(PRINT_PREFIX, format("\124cffff0000Unknown buff:\124r %s", spell))
+            print(PRINT_PREFIX, format("\124cffff0000Unknown buff '\124r%s\124cffff0000'", spell))
             return
         end
 
@@ -2177,12 +2179,12 @@ local function BuffMe(cmd)
                         if UnitIsUnit(unit, "player") then
                             print(PRINT_PREFIX, format("You already have %s.", what))
                         else
-                            local who = unit
+                            local who = unitName
 
                             local raidIndex = UnitInRaid(unit)
                             if raidIndex then
                                 local _, _, subgroup = GetRaidRosterInfo(raidIndex)
-                                who = format("%s (Group %d)", unit, subgroup)
+                                who = format("%s (Group %d)", unitName, subgroup)
                             end
 
                             local _, class = UnitClass(unit)
@@ -2246,7 +2248,7 @@ local function BuffMe(cmd)
 
             if not targetKnowsBuff then
                 if not silent then
-                    local who = RAID_CLASS_COLORS[targetClass]:WrapTextInColorCode(target)
+                    local who = RAID_CLASS_COLORS[targetClass]:WrapTextInColorCode(targetName)
                     local what = RAID_CLASS_COLORS[buffFamilyClass]:WrapTextInColorCode(buffFamilyName)
 
                     print(PRINT_PREFIX, format("%s cannot buff %s!", who, what))
@@ -2262,12 +2264,12 @@ local function BuffMe(cmd)
             if not target then
                 print(PRINT_PREFIX, format("Requesting %s...", what))
             else
-                local who = target
+                local who = targetName
 
                 local raidIndex = UnitInRaid(target)
                 if raidIndex then
                     local _, _, subgroup = GetRaidRosterInfo(raidIndex)
-                    who = format("%s (Group %d)", target, subgroup)
+                    who = format("%s (Group %d)", targetName, subgroup)
                 end
 
                 if targetClass then
@@ -2283,11 +2285,11 @@ local function BuffMe(cmd)
         if UnitIsUnit(unit, "player") then
             message = buffFamily:GetID()
         else
-            message = format("%s:%s-%s", buffFamily:GetID(), gsub(unit, "%-.*", ""), GetNormalizedRealmName())
+            message = format("%s:%s-%s", buffFamily:GetID(), gsub(unitName, "%-.*", ""), GetNormalizedRealmName())
         end
 
         if target then
-            C_ChatInfo.SendAddonMessage("BuffMe", message, "WHISPER", target)
+            C_ChatInfo.SendAddonMessage("BuffMe", message, "WHISPER", targetName)
         else
             if GetNumGroupMembers() == 0 then
                 C_ChatInfo.SendAddonMessage("BuffMe", message, "WHISPER", GetUnitName("player", true))
