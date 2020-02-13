@@ -1530,7 +1530,7 @@ do
     loadNext(next(BUFFS))
 end
 
-local PRINT_PREFIX = "\124cff8888ff<\124cff6666ffBuffMe\124cff8888ff>\124r"
+local PRINT_PREFIX = "<\124cffff4040BuffMe\124r>"
 local RAID_WARNING_FORMAT = "%s   --->   %s"
 local RAID_WARNING_WITH_GROUP_FORMAT = RAID_WARNING_FORMAT .. " (" .. GROUP_NUMBER .. ")"
 
@@ -1733,9 +1733,16 @@ local function BuffMe(cmd)
                 if not duration or expirationTime == 0 or expirationTime > GetTime() + duration then
                     if not silent then
                         if UnitIsUnit(unit, "player") then
-                            print(PRINT_PREFIX, format("\124cff00ff00You already have \124r%s\124cff00ff00.", auraName))
+                            print(PRINT_PREFIX, format("You already have \124cffffff00%s\124r.", auraName))
                         else
-                            print(PRINT_PREFIX, format("\124cff00ff00%s already has \124r%s\124cff00ff00.", unit, auraName))
+                            local who = unit
+
+                            local _, class = UnitClass(unit)
+                            if class then
+                                who = RAID_CLASS_COLORS[class]:WrapTextInColorCode(who)
+                            end
+
+                            print(PRINT_PREFIX, format("%s already has \124cffffff00%s\124r.", who, auraName))
                         end
                     end
 
@@ -1748,15 +1755,22 @@ local function BuffMe(cmd)
             local buffFamilyName = buffFamily:GetName(true)
 
             if not target then
-                print(PRINT_PREFIX, format("\124cffffff00Requesting \124r%s\124cffffff00.", buffFamilyName))
+                print(PRINT_PREFIX, format("Requesting \124cffffff00%s\124r...", buffFamilyName))
             else
+                local from = target
+
                 local raidIndex = UnitInRaid(target)
                 if raidIndex then
                     local _, _, subgroup = GetRaidRosterInfo(raidIndex)
-                    print(PRINT_PREFIX, format("\124cffffff00Requesting \124r%s \124cffffff00from \124r%s (Group %d)\124cffffff00.", buffFamilyName, target, subgroup))
-                else
-                    print(PRINT_PREFIX, format("\124cffffff00Requesting \124r%s \124cffffff00from \124r%s\124cffffff00.", buffFamilyName, target))
+                    from = format("%s (Group %d)", target, subgroup)
                 end
+
+                local _, class = UnitClass(target)
+                if class then
+                    from = RAID_CLASS_COLORS[class]:WrapTextInColorCode(from)
+                end
+
+                print(PRINT_PREFIX, format("Requesting \124cffffff00%s\124r from %s...", buffFamilyName, from))
             end
         end
 
