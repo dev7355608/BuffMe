@@ -15,6 +15,7 @@ local GetNumGroupMembers = GetNumGroupMembers
 local GetTalentInfo = GetTalentInfo
 local GetLocale = GetLocale
 local Ambiguate = Ambiguate
+local SecureCmdOptionParse = SecureCmdOptionParse
 local C_Timer = C_Timer
 local C_ChatInfo = C_ChatInfo
 local C_CreatureInfo = C_CreatureInfo
@@ -2108,70 +2109,25 @@ C_ChatInfo.RegisterAddonMessagePrefix("BuffMe")
 
 local function BuffMe(cmd)
     local unit = GetUnitName("player", true)
-    local target, duration, silent, exists, help
-    local conditionals = strmatch(cmd, "^%s*%[([^%]]*)%]")
-    local spells = {strsplit(",", conditionals and strmatch(cmd, "^%s*%[[^%]]*%]%s*(.-)%s*$") or cmd)}
-
-    if conditionals then
-        conditionals = {strsplit(",", conditionals)}
-
-        for _, conditional in ipairs(conditionals) do
-            local value = strmatch(conditional, "^%s*@%s*(.-)%s*$") or strmatch(conditional, "^%s*[tT][aA][rR][gG][eE][tT]%s*=%s*(.-)%s*$")
-
-            if value then
-                target = value
-            else
-                value = tonumber(strmatch(conditional, "^%s*<%s*(.-)%s*$") or strmatch(conditional, "^%s*[dD][uU][rR][aA][tT][iI][oO][nN]%s*=%s*(.-)%s*$"))
-
-                if value then
-                    duration = value
-                else
-                    value = strmatch(conditional, "^%s*[sS][iI][lL][iI][eE][nN][tT]%s*$")
-
-                    if value then
-                        silent = true
-                    else
-                        value = strmatch(conditional, "^%s*[eE][xX][iI][sS][tT][sS]%s*$")
-
-                        if value then
-                            exists = true
-                        else
-                            value = strmatch(conditional, "^%s*[hH][eE][lL][pP]%s*$")
-
-                            if value then
-                                help = true
-                            else
-                                print(PRINT_PREFIX, format("\124cffff0000Invalid argument:\124r %s", conditional))
-                                return
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
+    local result, target = SecureCmdOptionParse(cmd)
+    local duration = nil
+    local silent = false
 
     if target then
         if not UnitExists(target) or not GetUnitName(target, true) then
-            if not exists then
-                print(PRINT_PREFIX, format("\124cffff0000Unknown target:\124r %s", target))
-            end
+            print(PRINT_PREFIX, format("\124cffff0000Unknown target:\124r %s", target))
+            return
+        end
 
+        if not UnitIsPlayer(target) or not UnitCanAssist("player", target) then
+            print(PRINT_PREFIX, format("\124cffff0000Invalid target:\124r %s", target))
             return
         end
 
         target = GetUnitName(target, true)
-
-        if not UnitIsPlayer(target) or not UnitCanAssist("player", target) then
-            if not help then
-                print(PRINT_PREFIX, format("\124cffff0000Invalid target:\124r %s", target))
-            end
-
-            return
-        end
     end
 
-    for _, spell in ipairs(spells) do
+    for _, spell in ipairs({strsplit(",", result)}) do
         local buffFamily = BuffFamily:Get(spell)
 
         if not buffFamily then
