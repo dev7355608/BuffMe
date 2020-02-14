@@ -107,6 +107,7 @@ local POISON_CLEANSING_TOTEM_EFFECT = "Poison Cleansing Totem Effect"
 local POWER_INFUSION = "Power Infusion"
 local POWER_WORD_FORTITUDE = "Power Word: Fortitude"
 local POWER_WORD_SHIELD = "Power Word: Shield"
+local PRAYER_OF_FORTITUDE = "Prayer of Fortitude"
 local PRAYER_OF_SHADOW_PROTECTION = "Prayer of Shadow Protection"
 local PRAYER_OF_SPIRIT = "Prayer of Spirit"
 local REGROWTH = "Regrowth"
@@ -386,6 +387,8 @@ local SPELL_INFO_NAME = {
     [20912] = BLESSING_OF_SANCTUARY,
     [20913] = BLESSING_OF_SANCTUARY,
     [20914] = BLESSING_OF_SANCTUARY,
+    [21562] = PRAYER_OF_FORTITUDE,
+    [21564] = PRAYER_OF_FORTITUDE,
     [21849] = GIFT_OF_THE_WILD,
     [21850] = GIFT_OF_THE_WILD,
     [23028] = ARCANE_BRILLIANCE,
@@ -667,6 +670,8 @@ local SPELL_INFO_CLASS = {
     [20912] = 2,
     [20913] = 2,
     [20914] = 2,
+    [21562] = 5,
+    [21564] = 5,
     [21849] = 11,
     [21850] = 11,
     [23028] = 8,
@@ -981,6 +986,14 @@ local BUFFS = {
         {
             2791,
             2791
+        },
+        {
+            21562,
+            21562
+        },
+        {
+            21564,
+            21564
         }
     },
     {
