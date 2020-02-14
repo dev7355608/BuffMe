@@ -2118,6 +2118,10 @@ eventFrame:SetScript(
     end
 )
 
+local function SendAddonMessage(...)
+    return ChatThrottleLib:SendAddonMessage("ALERT", ...)
+end
+
 local function BuffMe(cmd)
     local unit = "player"
     local unitName = GetUnitName(unit, true)
@@ -2300,12 +2304,12 @@ local function BuffMe(cmd)
         end
 
         if target then
-            C_ChatInfo.SendAddonMessage("BuffMe", message, "WHISPER", targetName)
+            SendAddonMessage("BuffMe", message, "WHISPER", targetName)
         else
             if GetNumGroupMembers() == 0 then
-                C_ChatInfo.SendAddonMessage("BuffMe", message, "WHISPER", GetUnitName("player", true))
+                SendAddonMessage("BuffMe", message, "WHISPER", GetUnitName("player", true))
             else
-                C_ChatInfo.SendAddonMessage("BuffMe", message, "RAID")
+                SendAddonMessage("BuffMe", message, "RAID")
             end
         end
     end
