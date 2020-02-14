@@ -93,6 +93,7 @@ local GROUNDING_TOTEM = "Grounding Totem"
 local GROUNDING_TOTEM_EFFECT = "Grounding Totem Effect"
 local HEALING_STREAM = "Healing Stream"
 local HEALING_STREAM_TOTEM = "Healing Stream Totem"
+local INNERVATE = "Innervate"
 local MANA_SPRING = "Mana Spring"
 local MANA_SPRING_TOTEM = "Mana Spring Totem"
 local MANA_TIDE = "Mana Tide"
@@ -415,7 +416,8 @@ local SPELL_INFO_NAME = {
     [25918] = GREATER_BLESSING_OF_WISDOM,
     [27681] = PRAYER_OF_SPIRIT,
     [27683] = PRAYER_OF_SHADOW_PROTECTION,
-    [27841] = DIVINE_SPIRIT
+    [27841] = DIVINE_SPIRIT,
+    [29166] = INNERVATE
 }
 
 local SPELL_INFO_CLASS = {
@@ -698,7 +700,8 @@ local SPELL_INFO_CLASS = {
     [25918] = 2,
     [27681] = 5,
     [27683] = 5,
-    [27841] = 4
+    [27841] = 4,
+    [29166] = 11
 }
 
 local SPELL_INFO_RACE = {
@@ -1722,6 +1725,12 @@ local BUFFS = {
         {
             21850,
             21850
+        }
+    },
+    {
+        {
+            29166,
+            29166
         }
     }
 }
