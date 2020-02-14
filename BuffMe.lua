@@ -1985,34 +1985,6 @@ function BuffLoader.prototype:Load(callback)
     )
 end
 
-do
-    local function loadNext(i, buffIDs)
-        if not i then
-            return
-        end
-
-        local buffLoader = BuffLoader:Create()
-
-        for _, spellID_auraID in ipairs(buffIDs) do
-            buffLoader:Add(unpack(spellID_auraID))
-        end
-
-        C_Timer.After(
-            0,
-            function()
-                buffLoader:Load(
-                    function(...)
-                        BuffFamily:Create(...)
-                        loadNext(next(BUFFS, i))
-                    end
-                )
-            end
-        )
-    end
-
-    loadNext(next(BUFFS))
-end
-
 local BuffMeChatTypeInfo = {r = 1.0, g = 0.84, b = 0.73, flashTab = true, flashTabOnGeneral = true, sticky = 0}
 
 local function BuffMe_Print(...)
@@ -2066,7 +2038,6 @@ do
 end
 
 local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("CHAT_MSG_ADDON")
 eventFrame:SetScript(
     "OnEvent",
     function(self, event, prefix, text, channel, sender)
@@ -2140,8 +2111,6 @@ eventFrame:SetScript(
         PlaySoundFile("Sound\\Interface\\RaidWarning.ogg")
     end
 )
-
-C_ChatInfo.RegisterAddonMessagePrefix("BuffMe")
 
 local function BuffMe(cmd)
     local unit = "player"
@@ -2336,6 +2305,51 @@ local function BuffMe(cmd)
     end
 end
 
+local loadFrame = CreateFrame("Frame")
+loadFrame:RegisterEvent("ADDON_LOADED")
+loadFrame:SetScript(
+    "OnEvent",
+    function(self, event, addOnName)
+        if addOnName ~= "BuffMe" then
+            return
+        end
+
+        self:UnregisterEvent("ADDON_LOADED")
+
+        local function loadNext(i, buffIDs)
+            if not i then
+                SLASH_BUFFME1 = "/buffme"
+                SlashCmdList["BUFFME"] = BuffMe
+
+                C_ChatInfo.RegisterAddonMessagePrefix("BuffMe")
+
+                eventFrame:RegisterEvent("CHAT_MSG_ADDON")
+                return
+            end
+
+            local buffLoader = BuffLoader:Create()
+
+            for _, spellID_auraID in ipairs(buffIDs) do
+                buffLoader:Add(unpack(spellID_auraID))
+            end
+
+            C_Timer.After(
+                0,
+                function()
+                    buffLoader:Load(
+                        function(...)
+                            BuffFamily:Create(...)
+                            loadNext(next(BUFFS, i))
+                        end
+                    )
+                end
+            )
+        end
+
+        loadNext(next(BUFFS))
+    end
+)
+
 local BUFFME_NOTICE_DEFAULT_HOLD_TIME = 10.0
 local BUFFME_NOTICE_FADE_IN_TIME = 0.0
 local BUFFME_NOTICE_FADE_OUT_TIME = 1.0
@@ -2418,7 +2432,3 @@ function BuffMeWarningFrame_OnLoad(self)
     self.timings["RAID_NOTICE_SCALE_UP_TIME"] = 0.2
     self.timings["RAID_NOTICE_SCALE_DOWN_TIME"] = 0.4
 end
-
-SLASH_BUFFME1 = "/buffme"
-
-SlashCmdList["BUFFME"] = BuffMe
