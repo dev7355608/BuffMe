@@ -80,6 +80,7 @@ local FLAMETONGUE_TOTEM_EFFECT = "Flametongue Totem Effect"
 local FROST_RESISTANCE = "Frost Resistance"
 local FROST_RESISTANCE_AURA = "Frost Resistance Aura"
 local FROST_RESISTANCE_TOTEM = "Frost Resistance Totem"
+local GIFT_OF_THE_WILD = "Gift of the Wild"
 local GRACE_OF_AIR = "Grace of Air"
 local GRACE_OF_AIR_TOTEM = "Grace of Air Totem"
 local GREATER_BLESSING_OF_KINGS = "Greater Blessing of Kings"
@@ -96,6 +97,7 @@ local MANA_SPRING = "Mana Spring"
 local MANA_SPRING_TOTEM = "Mana Spring Totem"
 local MANA_TIDE = "Mana Tide"
 local MANA_TIDE_TOTEM = "Mana Tide Totem"
+local MARK_OF_THE_WILD = "Mark of the Wild"
 local MOONKIN_AURA = "Moonkin Aura"
 local MOONKIN_FORM = "Moonkin Form"
 local NATURE_RESISTANCE = "Nature Resistance"
@@ -155,6 +157,7 @@ local SPELL_INFO_NAME = {
     [1044] = BLESSING_OF_FREEDOM,
     [1058] = REJUVENATION,
     [1075] = THORNS,
+    [1126] = MARK_OF_THE_WILD,
     [1243] = POWER_WORD_FORTITUDE,
     [1244] = POWER_WORD_FORTITUDE,
     [1245] = POWER_WORD_FORTITUDE,
@@ -168,6 +171,8 @@ local SPELL_INFO_NAME = {
     [2970] = DETECT_INVISIBILITY,
     [3627] = REJUVENATION,
     [3747] = POWER_WORD_SHIELD,
+    [5232] = MARK_OF_THE_WILD,
+    [5234] = MARK_OF_THE_WILD,
     [5242] = BATTLE_SHOUT,
     [5394] = HEALING_STREAM_TOTEM,
     [5599] = BLESSING_OF_PROTECTION,
@@ -190,6 +195,7 @@ local SPELL_INFO_NAME = {
     [6375] = HEALING_STREAM_TOTEM,
     [6377] = HEALING_STREAM_TOTEM,
     [6673] = BATTLE_SHOUT,
+    [6756] = MARK_OF_THE_WILD,
     [6940] = BLESSING_OF_SACRIFICE,
     [7294] = RETRIBUTION_AURA,
     [7804] = BLOOD_PACT,
@@ -229,6 +235,7 @@ local SPELL_INFO_NAME = {
     [8514] = WINDFURY_TOTEM_EFFECT,
     [8835] = GRACE_OF_AIR_TOTEM,
     [8836] = GRACE_OF_AIR,
+    [8907] = MARK_OF_THE_WILD,
     [8910] = REJUVENATION,
     [8914] = THORNS,
     [8936] = REGROWTH,
@@ -244,6 +251,8 @@ local SPELL_INFO_NAME = {
     [9856] = REGROWTH,
     [9857] = REGROWTH,
     [9858] = REGROWTH,
+    [9884] = MARK_OF_THE_WILD,
+    [9885] = MARK_OF_THE_WILD,
     [9910] = THORNS,
     [10060] = POWER_INFUSION,
     [10156] = ARCANE_INTELLECT,
@@ -377,6 +386,8 @@ local SPELL_INFO_NAME = {
     [20912] = BLESSING_OF_SANCTUARY,
     [20913] = BLESSING_OF_SANCTUARY,
     [20914] = BLESSING_OF_SANCTUARY,
+    [21849] = GIFT_OF_THE_WILD,
+    [21850] = GIFT_OF_THE_WILD,
     [23028] = ARCANE_BRILLIANCE,
     [24858] = MOONKIN_FORM,
     [24907] = MOONKIN_AURA,
@@ -427,6 +438,7 @@ local SPELL_INFO_CLASS = {
     [1044] = 2,
     [1058] = 11,
     [1075] = 11,
+    [1126] = 11,
     [1243] = 5,
     [1244] = 5,
     [1245] = 5,
@@ -440,6 +452,8 @@ local SPELL_INFO_CLASS = {
     [2970] = 9,
     [3627] = 11,
     [3747] = 5,
+    [5232] = 11,
+    [5234] = 11,
     [5242] = 1,
     [5394] = 7,
     [5599] = 2,
@@ -462,6 +476,7 @@ local SPELL_INFO_CLASS = {
     [6375] = 7,
     [6377] = 7,
     [6673] = 1,
+    [6756] = 11,
     [6940] = 2,
     [7294] = 2,
     [7804] = 9,
@@ -501,6 +516,7 @@ local SPELL_INFO_CLASS = {
     [8514] = 7,
     [8835] = 7,
     [8836] = 7,
+    [8907] = 11,
     [8910] = 11,
     [8914] = 11,
     [8936] = 11,
@@ -516,6 +532,8 @@ local SPELL_INFO_CLASS = {
     [9856] = 11,
     [9857] = 11,
     [9858] = 11,
+    [9884] = 11,
+    [9885] = 11,
     [9910] = 11,
     [10060] = 5,
     [10156] = 8,
@@ -649,6 +667,8 @@ local SPELL_INFO_CLASS = {
     [20912] = 2,
     [20913] = 2,
     [20914] = 2,
+    [21849] = 11,
+    [21850] = 11,
     [23028] = 8,
     [24858] = 11,
     [24907] = 11,
@@ -1651,6 +1671,44 @@ local BUFFS = {
         {
             10060,
             10060
+        }
+    },
+    {
+        {
+            1126,
+            1126
+        },
+        {
+            5232,
+            5232
+        },
+        {
+            6756,
+            6756
+        },
+        {
+            5234,
+            5234
+        },
+        {
+            8907,
+            8907
+        },
+        {
+            9884,
+            9884
+        },
+        {
+            9885,
+            9885
+        },
+        {
+            21849,
+            21849
+        },
+        {
+            21850,
+            21850
         }
     }
 }
