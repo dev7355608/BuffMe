@@ -14,7 +14,6 @@ local GetNormalizedRealmName = GetNormalizedRealmName
 local GetNumGroupMembers = GetNumGroupMembers
 local GetTalentInfo = GetTalentInfo
 local GetLocale = GetLocale
-local GetChatWindowInfo = GetChatWindowInfo
 local Ambiguate = Ambiguate
 local SecureCmdOptionParse = SecureCmdOptionParse
 local C_Timer = C_Timer
@@ -36,7 +35,6 @@ local sort = sort
 local unpack = unpack
 local max = max
 
-local ChatTypeInfo = ChatTypeInfo
 local GROUP_NUMBER = GROUP_NUMBER
 local TOOLTIP_TALENT_RANK_CURRENT_ONLY = TOOLTIP_TALENT_RANK_CURRENT_ONLY
 local RAID_CLASS_COLORS = RAID_CLASS_COLORS
@@ -1991,10 +1989,16 @@ local function BuffMe_Print(...)
     local message = strjoin(" ", "\124cffff8080<\124cffff4040BuffMe\124cffff8080>\124r", tostringall(...))
     local tab
 
-    for i = 1, 10 do
-        if GetChatWindowInfo(i) == "BuffMe" then
-            tab = i
-            break
+    for i = 1, NUM_CHAT_WINDOWS do
+        local name, _, _, _, _, _, shown = FCF_GetChatWindowInfo(i)
+        local chatFrame = _G["ChatFrame" .. i]
+        if chatFrame then
+            if shown or chatFrame.isDocked then
+                if name == "BuffMe" then
+                    tab = i
+                    break
+                end
+            end
         end
     end
 
@@ -2318,8 +2322,31 @@ loadFrame:SetScript(
 
         self:UnregisterEvent("ADDON_LOADED")
 
-        local function loadNext(i, buffIDs)
-            if not i then
+        local function loadNext(k, buffIDs)
+            if not k then
+                if FCF_GetNumActiveChatFrames() < NUM_CHAT_WINDOWS then
+                    local tab
+
+                    for i = 1, NUM_CHAT_WINDOWS do
+                        local name, _, _, _, _, _, shown = FCF_GetChatWindowInfo(i)
+                        local chatFrame = _G["ChatFrame" .. i]
+                        if chatFrame then
+                            if shown or chatFrame.isDocked then
+                                if name == "BuffMe" then
+                                    tab = i
+                                    break
+                                end
+                            end
+                        end
+                    end
+
+                    if not tab then
+                        local selectedChatFrame = SELECTED_CHAT_FRAME
+                        FCF_OpenNewWindow("BuffMe", true)
+                        FCF_Tab_OnClick(selectedChatFrame, "LeftButton")
+                    end
+                end
+
                 SLASH_BUFFME1 = "/buffme"
                 SlashCmdList["BUFFME"] = BuffMe
 
@@ -2341,7 +2368,7 @@ loadFrame:SetScript(
                     buffLoader:Load(
                         function(...)
                             BuffFamily:Create(...)
-                            loadNext(next(BUFFS, i))
+                            loadNext(next(BUFFS, k))
                         end
                     )
                 end
