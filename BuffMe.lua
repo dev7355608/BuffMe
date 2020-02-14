@@ -2074,24 +2074,26 @@ eventFrame:SetScript(
             end
         end
 
-        local buffFamilyName = buffFamily:GetName()
-
         unitName = Ambiguate(unitName or sender, "none")
 
         local _, unitClass = UnitClass(unitName)
         local _, buffFamilyClass = buffFamily:GetClassName(true)
 
         local who = unitName
-        local what = RAID_CLASS_COLORS[buffFamilyClass]:WrapTextInColorCode(buffFamilyName)
+        local who2 = unitName
+        local what = RAID_CLASS_COLORS[buffFamilyClass]:WrapTextInColorCode(buffFamily:GetName(true))
+        local what2 = RAID_CLASS_COLORS[buffFamilyClass]:WrapTextInColorCode(buffFamily:GetName())
 
         local raidIndex = UnitInRaid(unitName)
         if raidIndex then
             local _, _, subgroup = GetRaidRosterInfo(raidIndex)
             who = format("%s (Group %d)", unitName, subgroup)
+            who2 = format("%s (" .. GROUP_NUMBER .. ")", unitName, subgroup)
         end
 
         if unitClass then
             who = RAID_CLASS_COLORS[unitClass]:WrapTextInColorCode(who)
+            who2 = RAID_CLASS_COLORS[unitClass]:WrapTextInColorCode(who2)
         end
 
         if not silent then
@@ -2100,7 +2102,7 @@ eventFrame:SetScript(
 
         local duration = 5
 
-        BuffMeNotice_AddMessage(BuffMeWarningFrame, format("%s   >>>   %s", what, who), BuffMeChatTypeInfo, duration)
+        BuffMeNotice_AddMessage(BuffMeWarningFrame, format("%s   >>>   %s", what2, who2), BuffMeChatTypeInfo, duration)
 
         local unitFrame = LibGetFrame.GetUnitFrame(unitName)
 
