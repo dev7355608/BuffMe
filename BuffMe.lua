@@ -8,6 +8,7 @@ local UnitBuff = UnitBuff
 local UnitClass = UnitClass
 local UnitRace = UnitRace
 local UnitCanAssist = UnitCanAssist
+local IsInRaid = IsInRaid
 local GetTime = GetTime
 local GetRaidRosterInfo = GetRaidRosterInfo
 local GetNormalizedRealmName = GetNormalizedRealmName
@@ -2389,7 +2390,7 @@ local function BuffMe(cmd)
             if GetNumGroupMembers() == 0 then
                 SendAddonMessage("BuffMe", message, "WHISPER", GetUnitName("player", true))
             else
-                SendAddonMessage("BuffMe", message, "RAID")
+                SendAddonMessage("BuffMe", message, IsInRaid() and "RAID" or "PARTY")
             end
         end
     end
