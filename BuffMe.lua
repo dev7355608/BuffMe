@@ -95,6 +95,7 @@ local GROUNDING_TOTEM_EFFECT = "Grounding Totem Effect"
 local HEALING_STREAM = "Healing Stream"
 local HEALING_STREAM_TOTEM = "Healing Stream Totem"
 local INNERVATE = "Innervate"
+local LEADER_OF_THE_PACK = "Leader of the Pack"
 local MANA_SPRING = "Mana Spring"
 local MANA_SPRING_TOTEM = "Mana Spring Totem"
 local MANA_TIDE = "Mana Tide"
@@ -343,6 +344,7 @@ local SPELL_INFO_NAME = {
     [16190] = MANA_TIDE_TOTEM,
     [16191] = MANA_TIDE,
     [16387] = FLAMETONGUE_TOTEM,
+    [17007] = LEADER_OF_THE_PACK,
     [17354] = MANA_TIDE_TOTEM,
     [17355] = MANA_TIDE,
     [17359] = MANA_TIDE_TOTEM,
@@ -627,6 +629,7 @@ local SPELL_INFO_CLASS = {
     [16190] = 7,
     [16191] = 7,
     [16387] = 7,
+    [17007] = 11,
     [17354] = 7,
     [17355] = 7,
     [17359] = 7,
@@ -711,6 +714,7 @@ local SPELL_INFO_RACE = {
 
 local SPELL_INFO_TALENT = {
     [10060] = {1, 15, 7, 2},
+    [17007] = {2, 16, 7, 2},
     [19506] = {2, 14, 7, 2},
     [20217] = {2, 6, 3, 1},
     [20911] = {2, 12, 5, 2},
@@ -1732,6 +1736,12 @@ local BUFFS = {
         {
             29166,
             29166
+        }
+    },
+    {
+        {
+            17007,
+            17007
         }
     }
 }
