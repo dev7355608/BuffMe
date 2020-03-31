@@ -8,7 +8,7 @@ externals:
         tag: latest
     libs/LibGetFrame:
         url: https://github.com/mrbuds/LibGetFrame
-        tag: 1.3.0
+        tag: 1.4.0
     libs/LibCustomGlow:
         url: https://github.com/Stanzilla/LibCustomGlow
         tag: 1.0.3
