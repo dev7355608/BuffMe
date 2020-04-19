@@ -47,6 +47,7 @@ local LibClassicDurations
 local AMPLIFY_MAGIC = "Amplify Magic"
 local ARCANE_BRILLIANCE = "Arcane Brilliance"
 local ARCANE_INTELLECT = "Arcane Intellect"
+local ASPECT_OF_THE_WILD = "Aspect of the Wild"
 local BATTLE_SHOUT = "Battle Shout"
 local BLESSING_OF_FREEDOM = "Blessing of Freedom"
 local BLESSING_OF_KINGS = "Blessing of Kings"
@@ -374,6 +375,8 @@ local SPELL_INFO_NAME = {
     [19977] = BLESSING_OF_LIGHT,
     [19978] = BLESSING_OF_LIGHT,
     [19979] = BLESSING_OF_LIGHT,
+    [20043] = ASPECT_OF_THE_WILD,
+    [20190] = ASPECT_OF_THE_WILD,
     [20217] = BLESSING_OF_KINGS,
     [20707] = SOULSTONE_RESURRECTION,
     [20729] = BLESSING_OF_SACRIFICE,
@@ -659,6 +662,8 @@ local SPELL_INFO_CLASS = {
     [19977] = 2,
     [19978] = 2,
     [19979] = 2,
+    [20043] = 3,
+    [20190] = 3,
     [20217] = 2,
     [20707] = 9,
     [20729] = 2,
@@ -1742,6 +1747,16 @@ local BUFFS = {
         {
             17007,
             17007
+        }
+    },
+    {
+        {
+            20043,
+            20043
+        },
+        {
+            20190,
+            20190
         }
     }
 }
